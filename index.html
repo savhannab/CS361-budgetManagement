@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <title>Budget Management - Home</title>
+</head>
+<body>
+    <main id="content">
+        <header>
+        <h1>Budget Manager</h1>
+        <div class="profile-header">
+            <h2>Home</h2>
+            <div class="info-tooltip">
+                <i class="fas fa-info-circle info-icon"></i>
+                <span class="tooltip-text">Click here for page information</span>
+            </div>
+            <div id="info-modal" class="modal">
+                <div class="modal-content">
+                  <h2>Page Information</h2>
+                  <p>This page allows you to manage your budget and transactions. Once a budget item or transaction is entered, select 'Add' button and the data will populate. You will then be able to edit or delete data as needed. Filter transactions by 'Type', 'Category', or 'Date'
+                    , for quick access to the data you wish to see.</p>
+                  <button id="close-info-modal">Close</button>
+                </div>
+              </div>
+      </div>
+        </header>
+            <aside id="nav">
+                <h1>Dashboard</h1>
+                <nav>
+                    <div id="user-display">Welcome, <span id="username">Guest</span></div>
+                    <a href="reports.html">Reports</a>
+                    <a href="settings.html">Settings</a>
+                    <div class="button-container">
+                        <button type="button" id="logout-btn">Log Out</button>
+                      </div>
+                </nav>
+            </aside>
+            
+        </header>
+        <section id="summary">
+            <div class="summary-box">
+                <h3>Income</h3>
+                <p class="positive" id="income-total">$0.00</p>
+            </div>
+            <div class="summary-box">
+                <h3>Expense</h3>
+                <p class="negative" id="expense-total">$0.00</p>
+            </div>
+            <div class="summary-box">
+                <h3>Balance</h3>
+                <p class="balance" id="balance-total">$0.00</p>
+            </div>
+        </section>
+    
+        <section id="budget-container">
+            <section id="budgets">
+                <h2>Budget</h2>
+                <div id="budget-summary">
+                </div>
+            </section>
+    
+            <section id="budget-categories">
+                <h2>Budget Item</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Allocated</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="budget-table">
+                    </tbody>
+                </table>
+                </section>
+                <div id="add-section">
+                    <div class="card">
+                        <h3>Add Budget</h3>
+                        <select id="budget-category" required>
+                            <option value="" disabled selected>Select Category</option>
+                            <option value="food">Food</option>
+                            <option value="bills">Bills</option>
+                            <option value="transportation">Transportation</option>
+                            <option value="entertainment">Entertainment</option>
+                            <option value="health">Health</option>
+                            <option value="insurance">Insurance</option>
+                            <option value="housing">Housing</option>
+                            <option value="utilities">Utilities</option>
+                            <option value="debt">Debt</option>
+                            <option value="other">Other</option>
+                        </select>
+                            <input type="number" id="allocation-amount" placeholder="Allocation Amount" required>
+                            <button id="add-category">Add</button>
+                        </div>
+                    </div>
+                </div>
+        </section>
+        <div class="filter">
+            <label for="filter-type">Filter by Type:</label>
+                <select id="filter-type">
+                <option value="select">Select Type</option>
+                <option value="income">Income</option>
+                <option value="expense">Expense</option>
+                </select>
+            <label for="filter-category">Filter by Category:</label>
+            <select id="filter-category">
+                <option value="all">All</option>
+                <option value="food">Food</option>
+                <option value="bills">Bills</option>
+                <option value="transportation">Transportation</option>
+                <option value="entertainment">Entertainment</option>
+                <option value="health">Health</option>
+                <option value="insurance">Insurance</option>
+                <option value="housing">Housing</option>
+                <option value="utilities">Utilities</option>
+                <option value="debt">Debt</option>
+                <option value="other">Other</option>
+            </select>
+            <label for="filter-date">Filter by Date:</label>
+            <input type="date" id="filter-date">
+            </select>
+        </div>
+        <section id="transaction-form-section">
+            <h2>Add Transaction</h2>
+            <div class="transaction-form">
+                <select id="type">
+                    <option value="" disabled selected>Select Type</option>
+                    <option value="income">Income</option>
+                    <option value="expense">Expense</option>
+                </select>
+                <input type="number" id="amount" placeholder="Amount">
+                <select id="expense-category" required>
+                    <option value="" disabled selected>Select Category</option>
+                    <option value="none">N/A</option>
+                    <option value="food">Food</option>
+                    <option value="bills">Bills</option>
+                    <option value="transportation">Transportation</option>
+                    <option value="entertainment">Entertainment</option>
+                    <option value="health">Health</option>
+                    <option value="insurance">Insurance</option>
+                    <option value="housing">Housing</option>
+                    <option value="utilities">Utilities</option>
+                    <option value="debt">Debt</option>
+                    <option value="other">Other</option>
+                </select>
+                <input type="item" id="item-name" placeholder="Item Name" required>
+                <input type="date" id="date">
+                <button id="submit-transaction">Add</button>
+            </div>
+        </section>
+        
+        </section>
+        
+        <section id="transactions">
+            <h2>Recent Transactions</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Amount</th>
+                        <th>Category</th>
+                        <th>Name</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="transaction-table"></tbody>
+            </table>
+        </section>
+
+        <div id="confirm-modal" class="modal">
+            <div class="modal-content">
+            <h2>Are you sure?</h2>
+            <p>This action will permanently remove the data.</p>
+            <div class="modal-actions">
+                <button id="confirm-btn">Yes, Proceed</button>
+                <button id="cancel-btn">Cancel</button>
+            </div>
+            </div>
+        </div>
+  
+    </main>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
+    
+</body>
+</html>

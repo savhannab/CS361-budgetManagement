@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Budget Management App</title>
+  <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+<body>
+  <main id="profile-content">
+    <header>
+      <h1>Budget Management</h1>
+      <div class="profile-header">
+        <h2>User Profile</h2>
+        <div class="info-tooltip">
+          <i class="fas fa-info-circle info-icon"></i>
+          <span class="tooltip-text">Click here for page information</span>
+        </div>
+        <div id="info-modal" class="modal">
+            <div class="modal-content">
+              <h2>Page Information</h2>
+              <p>This page allows you to update your password, adjust preferences, and manage security settings. You may also permanently delete your account.</p>
+              <button id="close-info-modal">Close</button>
+            </div>
+          </div>
+      </div>
+    </header>
+    
+    <aside id="nav">
+      <h1>Dashboard</h1>
+      <nav>
+        <div id="user-display">Welcome, <span id="username">Guest</span></div>
+        <a href="index.html">Home</a>
+        <a href="reports.html">Reports</a>
+        <div class="button-container">
+          <button type="button" id="logout-btn">Log Out</button>
+        </div>
+      </nav>
+    </aside>
+
+    <section class="profile-container">
+      <div class="profile-pic-section">
+          <!-- <img id="profile-pic" src="image.jpg" alt="Profile Picture"> -->
+          <input type="file" id="upload-pic" accept="image/*">
+      </div>
+    <section>
+      <form id="profile-form">
+        <fieldset>
+          <legend>Change Password</legend>
+          <div class="form-row">
+            <div>
+              <label for="current-password">Current Password</label>
+              <input type="password" id="current-password" name="currentPassword" placeholder="Enter your password" autocomplete="current-password" required>
+            </div>
+            <div>
+              <label for="new-password">Update Password</label>
+              <input type="password" id="new-password" name="newPassword" placeholder="Enter your new password" autocomplete="new-password" required>
+            </div>
+          </div>
+        </fieldset>
+
+        <div class="button-container">
+          <button type="button" id="update-btn">Submit</button>
+        </div>
+      </form>
+    </section>
+    <div class="preferences">
+      <h2>Preferences</h2>
+      <label>
+          <input type="checkbox" id="dark-mode"> Enable Dark Mode
+      </label>
+        <h2>Security Settings</h2>
+        <label>
+            <input type="checkbox" id="factor"> Enable Two-Factor Authentication
+        </label>
+        <div class="button-container">
+          <button type="button" id="preferences">Submit</button>
+        </div>
+      </div>    
+    </div>
+
+    <section class="delete-account">
+      <h2>Delete Account</h2>
+      <p>After making a deletion request, your account will be permanently removed.</p>
+      <button id="delete-account-btn" class="delete-account-btn">Delete My Account</button>
+    </section>
+    <div id="confirm-modal" class="modal">
+      <div class="modal-content">
+      <h2>Are you sure?</h2>
+      <p>This action will permanently delete this account.</p>
+      <div class="modal-actions">
+          <button id="confirm-btn">Yes, Proceed</button>
+          <button id="cancel-btn">Cancel</button>
+      </div>
+      </div>
+  </div>
+  </main>
+  <script src="script.js"></script>
+</body>
+</html>
