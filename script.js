@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var date = getValue('date');
 
     if (!type || !amount || !category || !itemName || !date || isNaN(amount)) {
-      alert('Please fill in all fields.');
+      alert('All fields required.');
       return;
     }
 
@@ -110,11 +110,50 @@ document.addEventListener('DOMContentLoaded', function() {
           updateSummary(); 
         });
       });
-    } else if (text === 'Edit') {
-      button.addEventListener('click', function() {
-      });
-    }
+    } 
+    else if (text === 'Edit') {
+      button.addEventListener('click', function () {
+        const index = Array.from(transactionTable.children).indexOf(row);
+        const values = row.querySelectorAll('td');
+    
+        if (button.textContent === 'Edit') {
 
+          const fieldNames = ['type', 'amount', 'category', 'itemName', 'date'];
+    
+          for (let i = 0; i < values.length - 1; i++) { 
+            const input = document.createElement('input');
+            input.value = values[i].textContent.replace('$', ''); 
+            input.name = fieldNames[i]; 
+            values[i].textContent = '';
+            values[i].appendChild(input);
+          }
+    
+          button.textContent = 'Save';
+    
+        } else {
+          const updatedTransaction = {
+            type: values[0].firstChild.value,
+            amount: parseFloat(values[1].firstChild.value).toFixed(2),
+            category: values[2].firstChild.value,
+            itemName: values[3].firstChild.value,
+            date: values[4].firstChild.value
+          };
+    
+          transactions[index] = updatedTransaction;
+    
+          values[0].textContent = capitalize(updatedTransaction.type);
+          values[1].textContent = '$' + updatedTransaction.amount;
+          values[2].textContent = updatedTransaction.category;
+          values[3].textContent = updatedTransaction.itemName;
+          values[4].textContent = updatedTransaction.date;
+    
+          saveTransactions();
+          updateSummary();
+    
+          button.textContent = 'Edit';
+        }
+      });  
+    }  
     return button;
   }
 
@@ -178,7 +217,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
     transactions.forEach(transaction => {
       const amount = parseFloat(transaction.amount);
-      if (transaction.type === 'income') {
+      if (transaction.type.toLowerCase() === 'income') {
         income += amount;
       } else {
         expense += amount;
