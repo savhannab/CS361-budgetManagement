@@ -35,12 +35,17 @@ function viewPassword() {
 function isValid(event) {
     event.preventDefault();  
 
-    const signup = document.querySelector('#signup form');
-    const email = document.querySelector('.email-input').value.trim();
-    const password = signup.querySelector('#password').value;
-    const confirmPassword = signup.querySelector('#confirmPassword').value;
-    const confirmError = signup.querySelector('#confirm-error');
+    const firstName = document.getElementById('first-name').value.trim();
+    const lastName = document.getElementById('last-name').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    const confirmError = document.getElementById('confirm-error');
     
+    if (!firstName || !lastName || !email || !password || !confirmPassword) {
+        alert('All fields required.');
+        return;
+    }
     if (checkAccount(email)) {
         alert('An account with this email already exists.')
         return;
@@ -53,6 +58,8 @@ function isValid(event) {
     else {
         confirmError.textContent = '';
     }
+    console.log('Saving account with:', { firstName, lastName, email, password });
+    saveAccount(firstName, lastName, email, password);
     window.location.href = 'index.html';
 }
 
@@ -66,32 +73,45 @@ function checkAccount(email) {
     return false;
 }
 
-function saveAccount(email, password) {
+function saveAccount(firstName, lastName, email, password) {
     const users = JSON.parse(localStorage.getItem('users')) || [];
-    users.push({ email, password });
+    users.push({ firstName: firstName, lastName: lastName, email: email, password: password});
     localStorage.setItem('users', JSON.stringify(users));
 }
 
+document.getElementById('login-form').addEventListener('submit', authenticateUser);
+
 function authenticateUser(event) {
-    event.preventDefault();
+    event.preventDefault(); 
 
-    const email = document.getElementById('email-input').value.trim();
-    const password = document.getElementById('password').value;
-
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
 
     const users = JSON.parse(localStorage.getItem('users')) || [];
-    const user = users.find(function(user) {
-        return user.email === email && user.password === password;
-    });
+    const user = users.find(user => user.email.toLowerCase() === email.toLowerCase() && user.password === password);
 
     if (user) {
-        localStorage.setItem('users', JSON.stringify(user));
-        window.location.href = 'index.html';
+        localStorage.setItem('loggedin', JSON.stringify(user));
+        window.location.href = 'index.html';  
     } else {
         alert('Invalid email or password.');
     }
 }
+
 viewPassword();
-document.getElementById('signup').addEventListener('submit', isValid);
+document.querySelector('#signup-form').addEventListener('submit', isValid);
 document.querySelector('#login-form').addEventListener('submit', authenticateUser);
+
+const currentUser = JSON.parse(localStorage.getItem('loggedin'));
+const usernameDisplay = document.getElementById('username');
+
+if (currentUser && currentUser.firstName && usernameDisplay) {
+    usernameDisplay.textContent = currentUser.firstName;
+} else if (window.location.pathname.includes('index.html') && !currentUser) {
+    window.location.href = 'login.html';
+} 
+
+
+
+
 

@@ -6,6 +6,7 @@
     <title>Budget Management Login</title>
     <link rel="stylesheet" href="login.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
 </head>
 <body>
     <div class="form-container">
@@ -18,30 +19,31 @@
         <div class="selection-content">
             <div id="signup">   
                 <h2>Sign Up for Free</h2>
-                <form action="index.html" method="POST">
+                <form id="signup-form">
                     <div class="name-info">
                         <div class="input">
-                            <label>First Name<span class="req">*</span></label>
-                            <input type="text" name="firstName" required autocomplete="off" />
+                            <label for="first-name">First Name</label>
+                            <input type="text" id="first-name" name="firstName" required autocomplete="username">
                         </div>
                         <div class="input">
-                            <label>Last Name<span class="req">*</span></label>
-                            <input type="text" name="lastName" required autocomplete="off" />
+                            <label for="last-name">Last Name</label>
+                            <input type="text" id="last-name" name="lastName">
                         </div>
                     </div>
 
                     <div class="input">
-                        <label>Email Address<span class="req">*</span></label>
-                        <input type="email" class="email-input" name="email" required autocomplete="off" />
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" name="email" required autocomplete="off">
+
                     </div>
 
                     <div class="input">
-                        <label>Password <span class="req">*</span></label>
+                        <label for="password">Password</label>
                         <div class="password-container">
                             <input
                                 type="password"
                                 id="password"
-                                name="password"
+                                name="password" required 
                                 minlength="8"
                                 required
                                 autocomplete="off"
@@ -55,12 +57,12 @@
                         <div id="error">Password must meet the criteria.</div>
                     </div>
                     <div class="input">
-                        <label>Confirm Password <span class="req">*</span></label>
+                        <label for="confirmPassword">Confirm Password</label>
                         <div class="confirm-container">
                             <input
                                 type="password"
                                 id="confirmPassword"
-                                name="confirmPassword"
+                                name="confirmPassword" required
                                 minlength="8"
                                 required
                                 autocomplete="off"
@@ -81,26 +83,27 @@
 
             <div id="login" class="selection-content" style="display: none;">   
                 <h2>Welcome Back!</h2>
-                <form action="index.html" method="POST" id="login-form">
+                <form id="login-form">
                     <div class="input">
-                        <label>Email Address<span class="req">*</span></label>
-                        <input type="email" id="email" name="email" required autocomplete="off" />
+                        <label for="login-email">Email Address</label>
+                        <input type="email" id="login-email" name="email" required autocomplete="off">
                     </div>
-
+            
                     <div class="input">
-                        <label>Password<span class="req">*</span></label>
+                        <label for="login-password">Password</label>
                         <div class="password-container">
-                            <input type="password" id="password" name="password" required autocomplete="off">
+                            <input type="password" id="login-password" name="password" required autocomplete="off">
                             <span class="password-view-icon">
-                            <i class="fas fa-eye" id="viewPassword"></i>
+                                <i class="fas fa-eye" id="viewPassword"></i>
                             </span>
                         </div>
-
-                    <p class="forgot">Forgot Password?</a></p>
-
+                    </div>
+            
+                    <p class="forgot">Forgot Password?</p>
+            
                     <button type="submit" class="button">Log In</button>
                 </form>
-            </div>
+            </div>            
         </div>  
     </div>
     <script src="login.js"></script>

@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   document.getElementById('logout-btn').addEventListener('click', function() {
-    localStorage.removeItem('users');
+    localStorage.removeItem('loggedin');
     window.location.href = 'login.html';
   });
 
@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (transactionTable) {
       transactions.forEach(function(transaction) {
-        transactionTable.appendChild(createRow(transaction.type, transaction.amount, transaction.name, transaction.date));
+        transactionTable.appendChild(createRow(transaction.type, transaction.amount, transaction.category, transaction.itemName, transaction.date));
       });
     }
     updateSummary(); 
@@ -60,17 +60,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
     var addRow = createRow(type, amount, category, itemName, date);
     transactionTable.appendChild(addRow);
-    clearForm(['type', 'amount', 'expense-category', 'item-name', 'date']);
     transactions.push({ type, amount, category, itemName, date });
     saveTransactions();
     updateSummary(); 
+    clearForm(['type', 'amount', 'expense-category', 'item-name', 'date']);
   }
 
   function createRow(type, amount, category, itemName, date) {
     var row = document.createElement('tr');
     row.classList.add('transaction-row'); 
     row.setAttribute('data-type', type.toLowerCase()); 
-    row.setAttribute('data-category', category.toLowerCase());
+    row.setAttribute('data-category', category);
     row.setAttribute('data-date', date);
     row.appendChild(addElement(capitalize(type)));
     row.appendChild(addElement('$' + amount));
@@ -112,7 +112,6 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     } else if (text === 'Edit') {
       button.addEventListener('click', function() {
-        alert('Edit functionality not implemented yet!');
       });
     }
 
@@ -123,8 +122,6 @@ document.addEventListener('DOMContentLoaded', function() {
     deleteAccountBtn.addEventListener('click', function () {
       confirm(function () {
         localStorage.clear();
-        alert('Your account data has been deleted.');
-        // Optionally redirect or refresh after account deletion
         window.location.reload();
       });
     });
@@ -204,24 +201,29 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
   }  
-  document.getElementById('filter-category').addEventListener('change', filterTransactions);
-  document.getElementById('filter-date').addEventListener('change', filterTransactions);
-  document.getElementById('filter-type').addEventListener('change', filterTransactions);
-  console.log(document.getElementById('filter-category'));
+  
+  if (document.getElementById('filter-category') && document.getElementById('filter-date') && document.getElementById('filter-type')) {
+    const filterCategory = document.getElementById('filter-category');
+    const filterDate = document.getElementById('filter-date');
+    const filterType = document.getElementById('filter-type');
+    
+    filterCategory.addEventListener('change', filterTransactions);
+    filterDate.addEventListener('change', filterTransactions);
+    filterType.addEventListener('change', filterTransactions);
+  }
   
   function filterTransactions() {
     const rows = document.querySelectorAll("tr.transaction-row");
-  
-    const filterCategory = document.getElementById('filter-category').value.toLowerCase(); // Convert to lowercase
+    const filterCategory = document.getElementById('filter-category').value;
     const filterDate = document.getElementById('filter-date').value;
     const filterType = document.getElementById('filter-type').value.toLowerCase();
   
     rows.forEach(row => {
-      const transactionCategory = row.getAttribute("data-category").toLowerCase();
+      const transactionCategory = row.getAttribute("data-category");
       const transactionDate = row.getAttribute("data-date");
       const transactionType = row.getAttribute("data-type");
   
-      const categoryMatch = filterCategory === "all" || transactionCategory === filterCategory;
+      const categoryMatch = filterCategory === "All" || transactionCategory === filterCategory;
       const dateMatch = !filterDate || transactionDate === filterDate;
       const typeMatch = filterType === "select" || transactionType === filterType;
   
@@ -232,4 +234,5 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   }
+  window.addEventListener('load', loadTransactions);
 });
