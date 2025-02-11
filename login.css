@@ -7,7 +7,7 @@ body {
     height: 100vh;
 }
 
-html, body, ul, li, a, h1, form, label, input, button,  section, article, nav {
+html, body, ul, li, a, h1, form, label, input, button,  section, nav {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -17,6 +17,7 @@ p {
     padding-bottom: 10px;
     font-weight: 400;
 }
+
 .form-container {
     background-color: #34495e;
     padding: 2rem;
@@ -52,11 +53,11 @@ h2 {
     cursor: pointer;
     transition: background-color 0.3s ease;
     margin-top: 15px;
-  }
+}
   
-  .guest-btn:hover {
-    background-color: #8d7d5a;
-  }
+.guest-btn:hover {
+background-color: #8d7d5a;
+}
 #signup h2 {
     margin-top: 2rem;
 }
