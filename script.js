@@ -167,7 +167,7 @@ document.addEventListener('DOMContentLoaded', function() {
     deleteAccountBtn.addEventListener('click', function () {
       confirm(function () {
         localStorage.clear();
-        window.location.reload();
+        window.location.href = 'login.html';
       });
     });
   }
