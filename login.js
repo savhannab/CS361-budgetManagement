@@ -14,6 +14,10 @@ document.getElementById('logging-in').addEventListener('click', function(event) 
     document.getElementById('signup').style.display = 'none';
 });
 
+document.getElementById('guest-login-btn').addEventListener('click', function() {
+    window.location.href = 'index.html';  
+});
+
 function viewPassword() {
     document.querySelectorAll('.password-view-icon').forEach(icon => {
         icon.addEventListener('click', function () {

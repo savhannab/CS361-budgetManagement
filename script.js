@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
   var balance = document.getElementById('balance-total');
   var deleteAccountBtn = document.getElementById('delete-account-btn');
   var transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+  const loggedInUser = JSON.parse(localStorage.getItem('loggedin'));
 
   infoTooltip.addEventListener('click', function() {
     infoModal.style.display = 'block';
@@ -29,6 +30,11 @@ document.addEventListener('DOMContentLoaded', function() {
     window.location.href = 'login.html';
   });
 
+  if (loggedInUser && loggedInUser.firstName) {
+    document.getElementById('first-name').textContent = loggedInUser.firstName;
+  } else {
+    document.getElementById('first-name').textContent = 'Guest'; 
+  }
   function loadTransactions() {
 
     if (transactionTable) {

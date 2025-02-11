@@ -41,6 +41,22 @@ h2 {
     padding-top: 10px;
 }
 
+.guest-btn {
+    width: 100%;
+    padding: 0.8rem;
+    background-color:#a07416;
+    border: none;
+    border-radius: 5px;
+    color: #ffffff;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-top: 15px;
+  }
+  
+  .guest-btn:hover {
+    background-color: #8d7d5a;
+  }
 #signup h2 {
     margin-top: 2rem;
 }
