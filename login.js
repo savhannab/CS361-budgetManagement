@@ -107,7 +107,7 @@ document.querySelector('#signup-form').addEventListener('submit', isValid);
 document.querySelector('#login-form').addEventListener('submit', authenticateUser);
 
 const currentUser = JSON.parse(localStorage.getItem('loggedin'));
-const usernameDisplay = document.getElementById('username');
+const usernameDisplay = document.getElementById('first-name');
 
 if (currentUser && currentUser.firstName && usernameDisplay) {
     usernameDisplay.textContent = currentUser.firstName;

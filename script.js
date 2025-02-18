@@ -46,9 +46,12 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   window.addEventListener('load', loadTransactions);
+    loadTransactions();
+    // fetchMicroservices();
     if (transactionbtn) {
       transactionbtn.addEventListener('click', function() {
         addTransaction();
+        // fetchMicroservices();
       });
   }
 
@@ -279,5 +282,4 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   }
-  window.addEventListener('load', loadTransactions);
 });

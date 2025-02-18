@@ -57,7 +57,7 @@ right: 5px;
     left: 0;
     height: 100vh;
     width: 200px;
-    background-color: #2C3E50;
+    background-color: var(--theme-color, #2C3E50); 
     color: #FFFFFF;
     display: flex;
     flex-direction: column;
@@ -503,16 +503,35 @@ button:hover {
     padding: 20px;
 }
 
+.profile-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: flex-start;
+    gap: 20px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
 #profile-form {
     background: #FCFCFC;
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    width: 350px;
+    width: 650px;
     text-align: left;  
-    margin-top: 30px;
-    
+    margin: 0;
+    height: 260px;
 }
+
+#profile-form, .preferences, .delete-account {
+    flex: 1;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    border-radius: 10px;
+    width: 650px;
+    min-height: fit-content;
+  }
 
 .preferences {
     display: flex;
@@ -521,11 +540,11 @@ button:hover {
     align-items: flex-start;
     background: #FCFCFC;
     padding: 20px;
-    margin-top: 20px;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    width: 350px;
+    width: 650px;
     text-align: center;  
+
 }
 
 .preferences h2 {
@@ -533,14 +552,18 @@ button:hover {
     width: 100%;
 }
 
+.dark-mode {
+    background-color: var(--theme-color, #2C3E50); 
+}
+
+
 .delete-account {
     background: #FCFCFC;
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    width: 350px;
+    height: 260px;
     text-align: left;  
-    margin-top: 30px;
 }
 
 .delete-account-btn {
