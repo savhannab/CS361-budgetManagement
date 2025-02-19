@@ -32,7 +32,7 @@ UML:
 
 
 Mitigation Plan:  
-Teammate: BriAnna Foreman  
+Teammate: Savhanna Beene  
 Status: In progress   
 Access: github link  
 Availability: 6 PM to 8 PM weekdays, anytime on weekends.  
