@@ -35,5 +35,5 @@ Mitigation Plan:
 Teammate: BriAnna Foreman  
 Status: In progress   
 Access: github link  
-Availability: 6 PM to 9 PM weekdays, anytime on weekends.  
+Availability: 6 PM to 8 PM weekdays, anytime on weekends.  
 Other Info: Budget categories are handled in frontend HTML using budget-category dropdown.  
