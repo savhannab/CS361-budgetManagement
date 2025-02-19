@@ -27,7 +27,7 @@ Example Call Request:
 UML:
 
 
-![414502937-a28debe3-3cd7-4567-877c-b50368ee4665](https://github.com/user-attachments/assets/405ff10f-52a5-492f-8499-ae533425ab90)
+https://github.com/savhannab/CS361-budgetManagement/issues/2
 
 
 Mitigation Plan:  
