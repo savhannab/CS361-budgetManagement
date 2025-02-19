@@ -7,7 +7,7 @@ API:
 - GET /api/budget-item: Retrieves all budget items.
 
 UML:
-
+https://github.com/savhannab/CS361-budgetManagement/issues/1
 
 Mitigation Plan:
 Teammate: BriAnna
