@@ -1,17 +1,19 @@
 const apiConnect = "http://127.0.0.1:5000/budget";
+const transactionApiConnect = "http://127.0.0.1:5001/transactions";
 
 document.addEventListener('DOMContentLoaded', function() {
-    var transactionbtn = document.getElementById('submit-transaction');
     var transactionTable = document.getElementById('transaction-table');
-    var infoTooltip = document.querySelector('.info-tooltip');
-    var infoModal = document.getElementById('info-modal');
-    var closeInfoModal = document.getElementById('close-info-modal');
+    var transactionBtn = document.getElementById('submit-transaction');
     var totalIncome = document.getElementById('income-total');
     var totalExpense = document.getElementById('expense-total');
     var balance = document.getElementById('balance-total');
-    var deleteAccountBtn = document.getElementById('delete-account-btn');
+    var infoTooltip = document.querySelector('.info-tooltip');
+    var infoModal = document.getElementById('info-modal');
+    var closeInfoModal = document.getElementById('close-info-modal');
     var addCategoryBtn = document.getElementById("add-category");
     var budgetTable = document.getElementById("budget-table");
+    var quickAddButtons = document.querySelectorAll('.quick-add-btn');
+    var quickAddInput = document.getElementById('amount-add');
     var transactions = JSON.parse(localStorage.getItem('transactions')) || [];
     const loggedInUser = JSON.parse(localStorage.getItem('loggedin'));
     
@@ -30,23 +32,27 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Creates row for budget item to be added
     function createBudgetRow(item) {
-        var row = document.createElement("tr");
-        row.setAttribute("data-id", item.id);
-        row.appendChild(addElement(item.category));
-        row.appendChild(addElement(`$${item.amount.toFixed(2)}`));
-
-        var actionsCell = document.createElement("td");
-        var editBtn = createButton("Edit", "edit-btn", function () {
-            editBudgetItem(item.id, row);
-        });
-        var deleteBtn = createButton("Delete", "delete-btn", function () {
-            deleteBudgetItem(item.id, row);
-        });
-        actionsCell.appendChild(editBtn);
-        actionsCell.appendChild(deleteBtn);
-        row.appendChild(actionsCell);
-        return row;
-    }
+      var row = document.createElement("tr");
+      row.setAttribute("data-id", item.id);
+      var categoryCell = document.createElement("td");
+      categoryCell.textContent = item.category;
+      row.appendChild(categoryCell);
+      var amountCell = document.createElement("td");
+      amountCell.textContent = `$${item.amount.toFixed(2)}`;
+      row.appendChild(amountCell);
+  
+      var actionsCell = document.createElement("td");
+      var editBtn = createButton("Edit", "edit-btn", function () {
+          editBudgetItem(item.id, row);
+      });
+      var deleteBtn = createButton("Delete", "delete-btn", function () {
+          deleteBudgetItem(item.id, row);
+      });
+      actionsCell.appendChild(editBtn);
+      actionsCell.appendChild(deleteBtn);
+      row.appendChild(actionsCell);
+      return row; 
+  }
 
     var budgInput = document.getElementById('budget-category');
     var allocInput = document.getElementById('allocation-amount');
@@ -141,6 +147,13 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   
+    function createButton(text, className, onClick) {
+      var button = document.createElement("button");
+      button.textContent = text;
+      button.className = className;
+      button.addEventListener("click", onClick);
+      return button;
+    }
 
     // Progress bar comparing budget items with transactions and displaying reults
     function createProgressBar(allocated, category) {
@@ -197,7 +210,6 @@ document.addEventListener('DOMContentLoaded', function() {
         budgetData.appendChild(container);
         });
     })
-    .catch(error => console.error("Error fetching budget:", error)); 
 
     function loadBudget() {
       fetch(apiConnect)
@@ -208,7 +220,6 @@ document.addEventListener('DOMContentLoaded', function() {
               }
               budgetItems.forEach(item => budgetTable.appendChild(createBudgetRow(item)));
           })
-          .catch(error => console.error("Error fetching budget:", error));
   }
 
     //Info modal
@@ -237,213 +248,225 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
       document.getElementById('first-name').textContent = 'Guest'; 
     }
-    
-    // Show transactions
-    function showTransactions() {
+
+    function createCell(text) {
+        const cell = document.createElement('td');
+        cell.textContent = text;
+        return cell;
+    }
+
+    // Transactions Microservice
+    function loadTransactions() {
+        fetch(transactionApiConnect)
+            .then(response => response.json())
+            .then(data => {
+                renderTransactions(data);
+                updateSummary(data);
+            })
+            .catch(error => console.error("Error loading transactions:", error));
+    }
+
+    function renderTransactions(transactions) {
         while (transactionTable.firstChild) {
             transactionTable.removeChild(transactionTable.firstChild);
         }
-        transactions.forEach(function(transaction, idx) {
-            var row = createRow(transaction.type, transaction.amount, transaction.category, transaction.itemName, transaction.date);
-            row.setAttribute('data-index', idx); 
+        transactions.forEach(transaction => {
+            const row = document.createElement('tr');
+            row.setAttribute("data-id", transaction.id);
+            row.setAttribute("data-type", transaction.type.toLowerCase());
+            row.setAttribute("data-category", transaction.category);
+            row.setAttribute("data-date", transaction.date);
+            row.appendChild(createCell(capitalize(transaction.type)));
+            row.appendChild(createCell("$" + parseFloat(transaction.amount).toFixed(2)));
+            row.appendChild(createCell(transaction.category));
+            row.appendChild(createCell(transaction.itemName));
+            row.appendChild(createCell(transaction.date));
+
+            const actionsCell = document.createElement('td');
+
+            const editBtn = document.createElement('button');
+            editBtn.textContent = "Edit";
+            editBtn.classList.add("edit-btn");
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = "Delete";
+            deleteBtn.classList.add("delete-btn");
+
+            actionsCell.appendChild(editBtn);
+            actionsCell.appendChild(deleteBtn);
+            row.appendChild(actionsCell);
+
             transactionTable.appendChild(row);
         });
-        updateSummary(); 
     }
-  
-    window.addEventListener('load', showTransactions);
-    showTransactions();
-      
-    if (transactionbtn) {
-        transactionbtn.addEventListener('click', function() {
-          addTransaction();
-        });
-    }
-  
-    // Add transactions
+
+    // Add transaction
     function addTransaction() {
-      var type = getValue('type');
-      var amount = parseFloat(getValue('amount')).toFixed(2);
-      var category = getValue('expense-category');
-      var itemName = getValue('item-name');
-      var date = getValue('date');
-  
-      if (!type || !amount || !category || !itemName || !date || isNaN(amount)) {
-        alert('All fields required.');
-        return;
-      }
-  
-      transactions.push({ type, amount, category, itemName, date });
-      saveTransactions();
-      showTransactions(); 
-      clearForm(['type', 'amount', 'expense-category', 'item-name', 'date']);
-    }
-  
-    function createRow(type, amount, category, itemName, date) {
-      var row = document.createElement('tr');
-      var newElement = addElement('');
-      var editBtn = createButton('Edit', 'edit-btn', row);
-      var deleteBtn = createButton('Delete', 'delete-btn', row);
-      row.classList.add('transaction-row'); 
-      row.setAttribute('data-type', type.toLowerCase()); 
-      row.setAttribute('data-category', category);
-      row.setAttribute('data-date', date);
-      row.appendChild(addElement(capitalize(type)));
-      row.appendChild(addElement('$' + amount));
-      row.appendChild(addElement(category));
-      row.appendChild(addElement(itemName));
-      row.appendChild(addElement(date));
-  
-  
-      newElement.appendChild(editBtn);
-      newElement.appendChild(deleteBtn);
-      row.appendChild(newElement);
-  
-      return row;
-    }
-  
-    // Helper
-    function addElement(text) {
-      var element = document.createElement('td');
-      element.textContent = text;
-      return element;
-    }
-  
-    // Edit/ save/ delete/ delete account buttons for transactions
-    function createButton(text, className) {
-        const button = document.createElement('button');
-        button.textContent = text;
-        button.className = className;
-        
-        button.addEventListener('click', (event) => {
-          const row = event.currentTarget.closest('tr');
-          if (!row) return; 
-          
-          const idx = parseInt(row.getAttribute('data-index'));
-          if (isNaN(idx)) return; 
+        const type = getValue('type');
+        const amountStr = getValue('amount');
+        const amount = parseFloat(amountStr);
+        const category = getValue('expense-category');
+        const itemName = getValue('item-name');
+        const date = getValue('date');
 
-          if (text === 'Delete') {
-            confirm(() => {
-              transactions.splice(idx, 1);
-              saveTransactions();
-              showTransactions();
-            });
+        if (!type || isNaN(amount) || !category || !itemName || !date) {
+            alert("All fields are required and amount must be valid.");
             return;
-          }
-          
-          const values = row.querySelectorAll('td');
-          if (button.textContent === 'Edit') {
-            const fields = ['type', 'amount', 'category', 'itemName', 'date'];
-            for (let i = 0; i < values.length - 1; i++) {
-              const input = document.createElement('input');
-              input.value = values[i].textContent.replace('$', '');
-              input.name = fields[i];
-              values[i].textContent = '';
-              values[i].appendChild(input);
-            }
-            button.textContent = 'Save';
-          } else {
-
-            const updatedTransaction = {
-              type: values[0].firstChild.value,
-              amount: parseFloat(values[1].firstChild.value).toFixed(2),
-              category: values[2].firstChild.value,
-              itemName: values[3].firstChild.value,
-              date: values[4].firstChild.value
-            };
-            transactions[idx] = updatedTransaction;
-            saveTransactions();
-            showTransactions();
-          }
-        });
-        
-        return button;
-    }
-      
-    if (deleteAccountBtn) {
-      deleteAccountBtn.addEventListener('click', function () {
-        confirm(function () {
-          localStorage.clear();
-          window.location.href = 'login.html';
-        });
-      });
-    }
-  
-    //Verify deletion or cancel 
-    function confirm(action) {
-      var modal = document.getElementById('confirm-modal');
-      var confirmBtn = document.getElementById('confirm-btn');
-      var cancelBtn = document.getElementById('cancel-btn');
-
-      modal.style.display = 'block';
-      confirmBtn.onclick = function() {
-        action();
-        closeModal(modal);
-      };
-      
-      cancelBtn.onclick = function() {
-        closeModal(modal);
-      };
-    
-      window.onclick = function(event) {
-        if (event.target === modal) {
-          closeModal(modal);
         }
+
+        const newTransaction = { type, amount, category, itemName, date };
+
+        fetch(transactionApiConnect, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(newTransaction)
+        })
+        .then(response => response.json())
+        .then(() => {
+            loadTransactions();
+            clearForm(['type', 'amount', 'expense-category', 'item-name', 'date']);
+        })
+        .catch(error => console.error("Error adding transaction:", error));
+    }
+
+    // Delete transaction
+    function deleteTransaction(transactionId) {
+        fetch(`${transactionApiConnect}/${transactionId}`, {
+            method: "DELETE"
+        })
+        .then(response => response.json())
+        .then(() => loadTransactions())
+        .catch(error => console.error("Error deleting transaction:", error));
+    }
+
+    // Edit transaction
+    function editTransaction(row) {
+        const cells = row.querySelectorAll('td');
+        for (let i = 0; i < 5; i++) {
+            const cell = cells[i];
+            const input = document.createElement('input');
+            let value = cell.textContent;
+            if (i === 1) {
+                value = value.replace('$', '');
+            }
+            input.value = value;
+            cell.textContent = "";
+            cell.appendChild(input);
+        }
+        const editBtn = row.querySelector('.edit-btn');
+        editBtn.textContent = "Save";
+    }
+
+    // Save transaction
+    function saveTransaction(row) {
+      if (!row) {
+        return;
+    }
+      const cells = row.querySelectorAll('td');
+      const updatedTransaction = {
+          type: cells[0].querySelector('input').value,
+          amount: parseFloat(cells[1].querySelector('input').value),
+          category: cells[2].querySelector('input').value,
+          itemName: cells[3].querySelector('input').value,
+          date: cells[4].querySelector('input').value
       };
+
+        fetch(`${transactionApiConnect}/${transactionId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(updatedTransaction)
+        })
+        .then(response => response.json())
+        .then(() => loadTransactions())
+        .catch(error => console.error("Error updating transaction:", error));
     }
-  
-    function capitalize(str) {
-      return str.charAt(0).toUpperCase() + str.slice(1);
+
+    // Income, expense, and balance summary 
+    function updateSummary(transactions) {
+        let income = 0, expense = 0;
+        transactions.forEach(tx => {
+            const amt = parseFloat(tx.amount);
+            if (tx.type.toLowerCase() === "income") {
+                income += amt;
+            } else {
+                expense += amt;
+            }
+        });
+        totalIncome.textContent = "$" + income.toFixed(2);
+        totalExpense.textContent = "$" + expense.toFixed(2);
+        const balanceVal = income - expense;
+        balance.textContent = "$" + balanceVal.toFixed(2);
+        if (balanceVal >= 0) {
+            balance.classList.remove("negative");
+            balance.classList.add("positive");
+        } else {
+            balance.classList.remove("positive");
+            balance.classList.add("negative");
+        }
     }
-  
+
+    transactionTable.addEventListener('click', function(event) {
+        const target = event.target;
+        const row = target.closest('tr');
+        if (!row) return;
+
+        if (target.classList.contains('delete-btn')) {
+            const transactionId = row.getAttribute('data-id');
+            if (confirm("Are you sure you want to delete this transaction?")) {
+                deleteTransaction(transactionId);
+            }
+        }
+
+        if (target.classList.contains('edit-btn')) {
+            if (target.textContent === "Edit") {
+                editTransaction(row);
+            } else if (target.textContent === "Save") {
+                saveTransaction(row);
+            }
+        }
+    });
+
     function getValue(id) {
-      return document.getElementById(id).value;
+        return document.getElementById(id).value;
     }
-  
+
     function clearForm(ids) {
-      ids.forEach(function(id) {
-        document.getElementById(id).value = '';
-      });
+        ids.forEach(id => {
+            document.getElementById(id).value = "";
+        });
     }
-  
-    function closeModal(modal) {
-      modal.style.display = 'none';
+
+    function capitalize(str) {
+        return str.charAt(0).toUpperCase() + str.slice(1);
     }
-  
-    function saveTransactions() {
-      localStorage.setItem('transactions', JSON.stringify(transactions));
+    if (transactionBtn) {
+        transactionBtn.addEventListener('click', addTransaction);
     }
+    loadTransactions();
   
     // Summary of income, expenses, and balance
-    function updateSummary() {
-      var expense = 0;
-      var income = 0;
-    
-      transactions.forEach(transaction => {
-        const amount = parseFloat(transaction.amount);
-        if (transaction.type.toLowerCase() === 'income') {
-          income += amount;
-        } else {
-          expense += amount;
-        }
+    function updateSummary(transactions) {
+      let income = 0, expense = 0;
+      transactions.forEach(tx => {
+          const amt = parseFloat(tx.amount);
+          if (tx.type.toLowerCase() === "income") {
+              income += amt;
+          } else {
+              expense += amt;
+          }
       });
-    
-      const currentBalance = income - expense;
-    
-      if (totalIncome && totalExpense && balance) {
-        totalIncome.textContent = '$' + income.toFixed(2);
-        totalExpense.textContent = '$' + expense.toFixed(2);
-        balance.textContent = '$' + currentBalance.toFixed(2);
-    
-        if (currentBalance >= 0) {
-          balance.classList.remove('negative');
-          balance.classList.add('positive');
-        } else {
-          balance.classList.remove('positive');
-          balance.classList.add('negative');
-        }
+      totalIncome.textContent = "$" + income.toFixed(2);
+      totalExpense.textContent = "$" + expense.toFixed(2);
+      const balanceVal = income - expense;
+      balance.textContent = "$" + balanceVal.toFixed(2);
+      if (balanceVal >= 0) {
+          balance.classList.remove("negative");
+          balance.classList.add("positive");
+      } else {
+          balance.classList.remove("positive");
+          balance.classList.add("negative");
       }
-    }
+  }
     if (
       document.getElementById('filter-category') &&
       document.getElementById('filter-date') &&
@@ -479,41 +502,55 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Quick add Salary, Housing, and Food after amount input is added
     function handleQuickAdd(event) {
-        var inputAmount = document.getElementById('amount-add');
-        var valueAmount = parseFloat(inputAmount.value);
-        var date = new Date().toLocaleDateString();
-        var formattedAmount = valueAmount.toFixed(2);
-        var button = event.currentTarget;
-        var btnCategory = button.getAttribute('data-category');
-        var transactionType, category, itemName;
-        if (!valueAmount || isNaN(valueAmount) || valueAmount <= 0) {
+      const valueAmount = parseFloat(quickAddInput.value);
+      if (!valueAmount || isNaN(valueAmount) || valueAmount <= 0) {
           alert("Please enter a valid amount.");
           return;
-        }
-        if (button.innerText.trim().toLowerCase() === 'salary') {
+      }
+      const date = new Date().toISOString().split('T')[0];
+      const formattedAmount = valueAmount.toFixed(2);
+      const button = event.currentTarget;
+      const btnCategory = button.getAttribute('data-category');
+      let transactionType, category, itemName;
+      if (button.textContent.trim().toLowerCase() === 'salary') {
           transactionType = "income";
           category = "N/A";
           itemName = "Salary";
-        } else {
+      } else {
           transactionType = "expense";
           category = btnCategory;
           itemName = "N/A";
-        }
-    
-        transactions.push({
+      }
+      const newTransaction = {
           type: transactionType,
-          amount: formattedAmount,
+          amount: parseFloat(formattedAmount),
           category: category,
           itemName: itemName,
           date: date
-        });
-        saveTransactions();
-        showTransactions();
-        inputAmount.value = '';
-    }  
-    var quickBtn = document.querySelectorAll('.quick-add-btn');
-    quickBtn.forEach(function(btn) {
-        btn.addEventListener('click', handleQuickAdd);
-    }); 
+      };
+      console.log("New Transaction via Quick Add:", newTransaction);
+      fetch(transactionApiConnect, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newTransaction)
+      })
+      .then(response => {
+          console.log("Quick add response status:", response.status);
+          return response.json();
+      })
+      .then(data => {
+          console.log("Quick add response data:", data);
+          loadTransactions();
+          quickAddInput.value = '';
+      })
+      .catch(error => console.error("Error adding quick transaction:", error));
+  }
+  if (transactionBtn) {
+      transactionBtn.addEventListener('click', addTransaction);
+  }
+  quickAddButtons.forEach(function(btn) {
+      btn.addEventListener('click', handleQuickAdd);
+  });
     loadBudget();
+    loadTransactions();
 });
