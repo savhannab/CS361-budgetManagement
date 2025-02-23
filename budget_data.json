@@ -1,0 +1,20 @@
+[
+  {
+    "category": "Food",
+    "amount": 300.0,
+    "spent": 90,
+    "id": 1
+  },
+  {
+    "category": "Insurance",
+    "amount": 900,
+    "id": 2,
+    "spent": 0
+  },
+  {
+    "category": "Transportation",
+    "amount": 500.0,
+    "id": 3,
+    "spent": 0
+  }
+]
