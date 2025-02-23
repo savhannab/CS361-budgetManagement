@@ -6,81 +6,83 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-DATA_FILE = "transactions.json"
+transactionFile = "transactions.json"
 
-def read_data():
-    if not os.path.exists(DATA_FILE):
-        initial_data = {"next_id": 1, "transactions": []}
-        with open(DATA_FILE, "w") as f:
-            json.dump(initial_data, f)
-        return initial_data
+# Check if file exists, if so read, else create
+def transactionData():
+    if not os.path.exists(transactionFile):
+        with open(transactionFile, "w") as file:
+            create = {"id": 1, "transactions": []}
+            json.dump(create, file)
+        return create
     else:
-        with open(DATA_FILE, "r") as f:
-            try:
-                data = json.load(f)
-            except json.JSONDecodeError:
-                data = {"next_id": 1, "transactions": []}
+        with open(transactionFile, "r") as file:
+            data = json.load(file)
+            data = {"id": 1, "transactions": []}
         return data
 
-def write_data(data):
-    with open(DATA_FILE, "w") as f:
-        json.dump(data, f, indent=4)
+# Add transaction to file
+def addTransaction(data):
+    with open(transactionFile, "w") as file:
+        json.dump(data, file, indent=4)
 
+# Return valid
 @app.route('/transactions', methods=['GET'])
 def get_transactions():
-    data = read_data()
+    data = transactionData()
     return jsonify(data["transactions"]), 200
 
+# Return error or created, inc id
 @app.route('/transactions', methods=['POST'])
 def add_transaction():
-    req_data = request.get_json()
+    required = request.get_json()
     required_fields = ["type", "amount", "category", "itemName", "date"]
-    if not req_data or not all(field in req_data for field in required_fields):
-        return jsonify({"error": "Missing required field(s)"}), 400
+    if not required or not all(field in required for field in required_fields):
+        return jsonify({"error": "All fields required)"}), 400
 
-    data = read_data()
+    data = transactionData()
     transaction = {
-        "id": data["next_id"],
-        "type": req_data["type"],
-        "amount": req_data["amount"],
-        "category": req_data["category"],
-        "itemName": req_data["itemName"],
-        "date": req_data["date"]
+        "id": data["id"],
+        "type": required["type"],
+        "amount": required["amount"],
+        "category": required["category"],
+        "itemName": required["itemName"],
+        "date": required["date"]
     }
     data["transactions"].append(transaction)
-    data["next_id"] += 1
-    write_data(data)
+    data["id"] += 1
+    addTransaction(data)
     return jsonify(transaction), 201
 
+# Update existing transaction
 @app.route('/transactions/<int:transaction_id>', methods=['PUT'])
 def update_transaction(transaction_id):
-    req_data = request.get_json()
-    if not req_data:
+    required = request.get_json()
+    if not required:
         return jsonify({"error": "Invalid data"}), 400
 
-    data = read_data()
+    data = transactionData()
     for transaction in data["transactions"]:
         if transaction["id"] == transaction_id:
-            transaction["type"] = req_data.get("type", transaction["type"])
-            transaction["amount"] = req_data.get("amount", transaction["amount"])
-            transaction["category"] = req_data.get("category", transaction["category"])
-            transaction["itemName"] = req_data.get("itemName", transaction["itemName"])
-            transaction["date"] = req_data.get("date", transaction["date"])
-            write_data(data)
+            transaction["type"] = required.get("type", transaction["type"])
+            transaction["amount"] = required.get("amount", transaction["amount"])
+            transaction["category"] = required.get("category", transaction["category"])
+            transaction["itemName"] = required.get("itemName", transaction["itemName"])
+            transaction["date"] = required.get("date", transaction["date"])
+            addTransaction(data)
             return jsonify(transaction), 200
+    return jsonify({"error": "Transaction does not exist"}), 404
 
-    return jsonify({"error": "Transaction not found"}), 404
-
+# Delete existing transaction
 @app.route('/transactions/<int:transaction_id>', methods=['DELETE'])
 def delete_transaction(transaction_id):
-    data = read_data()
+    data = transactionData()
     for transaction in data["transactions"]:
         if transaction["id"] == transaction_id:
             data["transactions"].remove(transaction)
-            write_data(data)
+            addTransaction(data)
             return jsonify({"message": "Transaction deleted"}), 200
-
-    return jsonify({"error": "Transaction not found"}), 404
+    return jsonify({"error": "Transaction does not exist"}), 404
 
 if __name__ == '__main__':
     app.run(port=5001, debug=True)

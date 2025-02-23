@@ -260,13 +260,13 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch(transactionApiConnect)
             .then(response => response.json())
             .then(data => {
-                renderTransactions(data);
+                showTransactions(data);
                 updateSummary(data);
             })
             .catch(error => console.error("Error loading transactions:", error));
     }
 
-    function renderTransactions(transactions) {
+    function showTransactions(transactions) {
         while (transactionTable.firstChild) {
             transactionTable.removeChild(transactionTable.firstChild);
         }
