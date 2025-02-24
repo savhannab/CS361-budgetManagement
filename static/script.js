@@ -27,7 +27,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             budgetItems.forEach(item => budgetTable.appendChild(createBudgetRow(item)));
         })
-        .catch(error => console.error("Error fetching budget:", error));
     }
 
     // Creates row for budget item to be added
@@ -62,7 +61,7 @@ document.addEventListener('DOMContentLoaded', function() {
         var amount = parseFloat(allocInput.value);
         var addItem = { category, amount };
         if (!category || isNaN(amount) || amount <= 0) {
-            alert("Please enter a valid category and amount.");
+            alert("Enter a valid category and amount.");
             return;
         }
         fetch(apiConnect, {
@@ -76,7 +75,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 budgInput.value = "";
                 allocInput.value = "";
             })
-            .catch(error => console.error("Error adding budget:", error));
     });
   }
 
@@ -148,11 +146,11 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   
     function createButton(text, className, onClick) {
-      var button = document.createElement("button");
-      button.textContent = text;
-      button.className = className;
-      button.addEventListener("click", onClick);
-      return button;
+        var button = document.createElement("button");
+        button.textContent = text;
+        button.className = className;
+        button.addEventListener("click", onClick);
+        return button;
     }
 
     // Progress bar comparing budget items with transactions and displaying reults
@@ -179,7 +177,7 @@ document.addEventListener('DOMContentLoaded', function() {
         bar.classList.add("progress-bar");
         if (percent < 40) {
           bar.classList.add('low');
-        } else if (percent < 80) {
+        } else if (percent < 70) {
           bar.classList.add('medium');
         } else {
           bar.classList.add('high');
@@ -211,16 +209,58 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     })
 
-    function loadBudget() {
-      fetch(apiConnect)
-          .then(response => response.json())
-          .then(budgetItems => {
-              while (budgetTable.firstChild) {
-                  budgetTable.removeChild(budgetTable.firstChild);
-              }
-              budgetItems.forEach(item => budgetTable.appendChild(createBudgetRow(item)));
-          })
-  }
+
+    function updateProgressBars() {
+        const budgetData = document.getElementById("budget-summary");
+        Array.from(budgetData.children).forEach(container => {
+            const label = container.querySelector("div:first-child");
+            if (!label) return;
+            const category = label.textContent.trim();
+            const allocatedAmount = parseFloat(container.getAttribute("data-allocated")) || 0;
+            const progress = createProgressBar(allocatedAmount, category);
+            const oldProgress = container.querySelector(".progress-container");
+            if (oldProgress) container.removeChild(oldProgress);
+            container.appendChild(progress);
+        });
+    }
+    
+   // Fetch budget data for progress bars
+    fetch(apiConnect)
+    .then(response => response.json())
+    .then(budgetItems => {
+        const budgetData = document.getElementById("budget-summary");
+        if (!budgetData) {
+            return;
+        }
+
+        while (budgetData.firstChild) {
+            budgetData.removeChild(budgetData.firstChild);
+        }
+        budgetItems.forEach(item => {
+            const container = document.createElement("div");
+            container.classList.add("budget-item");
+            const label = document.createElement("div");
+            label.textContent = item.category;
+            container.appendChild(label);
+            container.setAttribute("data-allocated", parseFloat(item.amount));
+            const progress = document.createElement("div");
+            progress.classList.add("progress-container");
+            container.appendChild(progress);
+
+            budgetData.appendChild(container);
+        });
+        updateProgressBars();
+    })
+        function loadBudget() {
+        fetch(apiConnect)
+            .then(response => response.json())
+            .then(budgetItems => {
+                while (budgetTable.firstChild) {
+                    budgetTable.removeChild(budgetTable.firstChild);
+                }
+                budgetItems.forEach(item => budgetTable.appendChild(createBudgetRow(item)));
+            })
+    }
 
     //Info modal
     infoTooltip.addEventListener('click', function() {
@@ -260,18 +300,26 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch(transactionApiConnect)
             .then(response => response.json())
             .then(data => {
-                showTransactions(data);
-                updateSummary(data);
+                transactions = data.transactions || data; 
+                showTransactions(transactions);
+                updateSummary(transactions);
+                setTimeout(updateProgressBars, 500);
             })
-            .catch(error => console.error("Error loading transactions:", error));
     }
-
-    function showTransactions(transactions) {
+    
+    function showTransactions(responseData) {
+        const transactions = responseData.transactions || responseData;
+        if (!Array.isArray(transactions)) {
+            return;
+        }
+    
         while (transactionTable.firstChild) {
             transactionTable.removeChild(transactionTable.firstChild);
         }
+    
         transactions.forEach(transaction => {
             const row = document.createElement('tr');
+            row.classList.add("transaction-row");
             row.setAttribute("data-id", transaction.id);
             row.setAttribute("data-type", transaction.type.toLowerCase());
             row.setAttribute("data-category", transaction.category);
@@ -281,25 +329,20 @@ document.addEventListener('DOMContentLoaded', function() {
             row.appendChild(createCell(transaction.category));
             row.appendChild(createCell(transaction.itemName));
             row.appendChild(createCell(transaction.date));
-
             const actionsCell = document.createElement('td');
-
             const editBtn = document.createElement('button');
             editBtn.textContent = "Edit";
             editBtn.classList.add("edit-btn");
-
             const deleteBtn = document.createElement('button');
             deleteBtn.textContent = "Delete";
             deleteBtn.classList.add("delete-btn");
-
             actionsCell.appendChild(editBtn);
             actionsCell.appendChild(deleteBtn);
             row.appendChild(actionsCell);
-
             transactionTable.appendChild(row);
         });
     }
-
+    
     // Add transaction
     function addTransaction() {
         const type = getValue('type');
@@ -308,13 +351,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const category = getValue('expense-category');
         const itemName = getValue('item-name');
         const date = getValue('date');
+        const newTransaction = { type, amount, category, itemName, date };
 
         if (!type || isNaN(amount) || !category || !itemName || !date) {
-            alert("All fields are required and amount must be valid.");
+            alert("All fields are required and must be valid.");
             return;
         }
-
-        const newTransaction = { type, amount, category, itemName, date };
 
         fetch(transactionApiConnect, {
             method: "POST",
@@ -326,7 +368,6 @@ document.addEventListener('DOMContentLoaded', function() {
             loadTransactions();
             clearForm(['type', 'amount', 'expense-category', 'item-name', 'date']);
         })
-        .catch(error => console.error("Error adding transaction:", error));
     }
 
     // Delete transaction
@@ -334,14 +375,17 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch(`${transactionApiConnect}/${transactionId}`, {
             method: "DELETE"
         })
-        .then(response => response.json())
+        .then(response => {
+            return response.json();
+        })
         .then(() => loadTransactions())
-        .catch(error => console.error("Error deleting transaction:", error));
-    }
+   }
+   
 
     // Edit transaction
     function editTransaction(row) {
         const cells = row.querySelectorAll('td');
+        const editBtn = row.querySelector('.edit-btn');
         for (let i = 0; i < 5; i++) {
             const cell = cells[i];
             const input = document.createElement('input');
@@ -353,40 +397,55 @@ document.addEventListener('DOMContentLoaded', function() {
             cell.textContent = "";
             cell.appendChild(input);
         }
-        const editBtn = row.querySelector('.edit-btn');
         editBtn.textContent = "Save";
     }
 
     // Save transaction
     function saveTransaction(row) {
-      if (!row) {
-        return;
-    }
-      const cells = row.querySelectorAll('td');
-      const updatedTransaction = {
-          type: cells[0].querySelector('input').value,
-          amount: parseFloat(cells[1].querySelector('input').value),
-          category: cells[2].querySelector('input').value,
-          itemName: cells[3].querySelector('input').value,
-          date: cells[4].querySelector('input').value
-      };
-
+        if (!row) return;
+    
+        const transactionId = row.getAttribute('data-id');
+        if (!transactionId) {
+            alert("Transaction ID not found. Unable to update.");
+            return;
+        }
+    
+        const cells = row.querySelectorAll('td');
+        const updatedTransaction = {
+            type: cells[0].querySelector('input').value.trim(),
+            amount: parseFloat(cells[1].querySelector('input').value),
+            category: cells[2].querySelector('input').value.trim(),
+            itemName: cells[3].querySelector('input').value.trim(),
+            date: cells[4].querySelector('input').value
+        };
+   
         fetch(`${transactionApiConnect}/${transactionId}`, {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
             body: JSON.stringify(updatedTransaction)
         })
-        .then(response => response.json())
-        .then(() => loadTransactions())
-        .catch(error => console.error("Error updating transaction:", error));
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => {
+                    throw new Error(err.error || "Failed to update transaction");
+                });
+            }
+            return response.json();
+        })
+        .then(() => {
+            loadTransactions(); 
+        })
     }
-
+   
     // Income, expense, and balance summary 
     function updateSummary(transactions) {
         let income = 0, expense = 0;
-        transactions.forEach(tx => {
-            const amt = parseFloat(tx.amount);
-            if (tx.type.toLowerCase() === "income") {
+        transactions.forEach(transaction => {
+            const amt = parseFloat(transaction.amount);
+            if (transaction.type.toLowerCase() === "income") {
                 income += amt;
             } else {
                 expense += amt;
@@ -445,28 +504,38 @@ document.addEventListener('DOMContentLoaded', function() {
     loadTransactions();
   
     // Summary of income, expenses, and balance
-    function updateSummary(transactions) {
-      let income = 0, expense = 0;
-      transactions.forEach(tx => {
-          const amt = parseFloat(tx.amount);
-          if (tx.type.toLowerCase() === "income") {
-              income += amt;
-          } else {
-              expense += amt;
-          }
-      });
-      totalIncome.textContent = "$" + income.toFixed(2);
-      totalExpense.textContent = "$" + expense.toFixed(2);
-      const balanceVal = income - expense;
-      balance.textContent = "$" + balanceVal.toFixed(2);
-      if (balanceVal >= 0) {
-          balance.classList.remove("negative");
-          balance.classList.add("positive");
-      } else {
-          balance.classList.remove("positive");
-          balance.classList.add("negative");
-      }
-  }
+    function updateSummary(responseData) {
+        const transactions = responseData.transactions || responseData; 
+    
+        if (!Array.isArray(transactions)) {
+            return;
+        }
+    
+        let income = 0, expense = 0;
+    
+        transactions.forEach(transaction => {
+            const amt = parseFloat(transaction.amount);
+            if (transaction.type.toLowerCase() === "income") {
+                income += amt;
+            } else {
+                expense += amt;
+            }
+        });
+    
+        totalIncome.textContent = "$" + income.toFixed(2);
+        totalExpense.textContent = "$" + expense.toFixed(2);
+        const balanceVal = income - expense;
+        balance.textContent = "$" + balanceVal.toFixed(2);
+    
+        if (balanceVal >= 0) {
+            balance.classList.remove("negative");
+            balance.classList.add("positive");
+        } else {
+            balance.classList.remove("positive");
+            balance.classList.add("negative");
+        }
+    }
+    
     if (
       document.getElementById('filter-category') &&
       document.getElementById('filter-date') &&
@@ -502,49 +571,57 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Quick add Salary, Housing, and Food after amount input is added
     function handleQuickAdd(event) {
-      const valueAmount = parseFloat(quickAddInput.value);
-      if (!valueAmount || isNaN(valueAmount) || valueAmount <= 0) {
-          alert("Please enter a valid amount.");
-          return;
-      }
-      const date = new Date().toISOString().split('T')[0];
-      const formattedAmount = valueAmount.toFixed(2);
-      const button = event.currentTarget;
-      const btnCategory = button.getAttribute('data-category');
-      let transactionType, category, itemName;
-      if (button.textContent.trim().toLowerCase() === 'salary') {
-          transactionType = "income";
-          category = "N/A";
-          itemName = "Salary";
-      } else {
-          transactionType = "expense";
-          category = btnCategory;
-          itemName = "N/A";
-      }
-      const newTransaction = {
-          type: transactionType,
-          amount: parseFloat(formattedAmount),
-          category: category,
-          itemName: itemName,
-          date: date
-      };
-      console.log("New Transaction via Quick Add:", newTransaction);
-      fetch(transactionApiConnect, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(newTransaction)
-      })
-      .then(response => {
-          console.log("Quick add response status:", response.status);
-          return response.json();
-      })
-      .then(data => {
-          console.log("Quick add response data:", data);
-          loadTransactions();
-          quickAddInput.value = '';
-      })
-      .catch(error => console.error("Error adding quick transaction:", error));
-  }
+        const valueAmount = parseFloat(quickAddInput.value);
+        if (!valueAmount || isNaN(valueAmount) || valueAmount <= 0) {
+            alert("Please enter a valid amount.");
+            return;
+        }
+   
+        const date = new Date().toISOString().split('T')[0];
+        const button = event.currentTarget;
+        const btnCategory = button.getAttribute('data-category');
+   
+        let transactionType, category, itemName;
+        if (button.textContent.trim().toLowerCase() === 'salary') {
+            transactionType = "income";
+            category = "N/A";
+            itemName = "Salary";
+        } else {
+            transactionType = "expense";
+            category = btnCategory;
+            itemName = "N/A";
+        }
+   
+        const newTransaction = {
+            type: transactionType,
+            amount: valueAmount,
+            category: category,
+            itemName: itemName,
+            date: date
+        };
+   
+        fetch(transactionApiConnect, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+            body: JSON.stringify(newTransaction)
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => {
+                    throw new Error(err.error || "Failed to add transaction");
+                });
+            }
+            return response.json();
+        })
+        .then(() => {
+            quickAddInput.value = ''; 
+            loadTransactions(); 
+        })
+   }
+    
   if (transactionBtn) {
       transactionBtn.addEventListener('click', addTransaction);
   }
