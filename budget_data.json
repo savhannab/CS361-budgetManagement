@@ -6,21 +6,9 @@
     "id": 1
   },
   {
-    "category": "Insurance",
-    "amount": 900,
+    "category": "Bills",
+    "amount": 50.0,
     "id": 2,
-    "spent": 0
-  },
-  {
-    "category": "Transportation",
-    "amount": 500.0,
-    "id": 3,
-    "spent": 0
-  },
-  {
-    "category": "Utilities",
-    "amount": 90,
-    "id": 4,
     "spent": 0
   }
 ]

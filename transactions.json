@@ -9,10 +9,34 @@
     },
     {
         "type": "Expense",
-        "amount": 80,
+        "amount": 50,
+        "category": "Food",
+        "itemName": "Store",
+        "date": "2025-02-24",
+        "id": 2
+    },
+    {
+        "type": "expense",
+        "amount": 120,
         "category": "Food",
         "itemName": "N/A",
         "date": "2025-02-24",
-        "id": 2
+        "id": 3
+    },
+    {
+        "type": "expense",
+        "amount": 1200,
+        "category": "Housing",
+        "itemName": "N/A",
+        "date": "2025-02-24",
+        "id": 4
+    },
+    {
+        "type": "Expense",
+        "amount": 10,
+        "category": "Bills",
+        "itemName": "Phone",
+        "date": "2025-02-03",
+        "id": 5
     }
 ]

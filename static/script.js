@@ -14,8 +14,18 @@ document.addEventListener('DOMContentLoaded', function() {
     var budgetTable = document.getElementById("budget-table");
     var quickAddButtons = document.querySelectorAll('.quick-add-btn');
     var quickAddInput = document.getElementById('amount-add');
+    const modal = document.getElementById("confirm-modal");
+    const confirmBtn = document.getElementById("confirm-btn");
+    const cancelBtn = document.getElementById("cancel-btn");
     var transactions = JSON.parse(localStorage.getItem('transactions')) || [];
-    const loggedInUser = JSON.parse(localStorage.getItem('loggedin'));
+    function getUserToken() {
+        return localStorage.getItem("token");
+    }
+    
+    function getUserId() {
+        return localStorage.getItem("user_id"); 
+    }
+    
     
     // Budget Microservice
     function loadBudget() {
@@ -42,11 +52,14 @@ document.addEventListener('DOMContentLoaded', function() {
   
       var actionsCell = document.createElement("td");
       var editBtn = createButton("Edit", "edit-btn", function () {
-          editBudgetItem(item.id, row);
+          budgetEdit(item.id, row);
       });
       var deleteBtn = createButton("Delete", "delete-btn", function () {
-          deleteBudgetItem(item.id, row);
-      });
+        itemToDelete = row; 
+        deleteType = "budget"; 
+        modal.style.display = "flex";
+    });
+    
       actionsCell.appendChild(editBtn);
       actionsCell.appendChild(deleteBtn);
       row.appendChild(actionsCell);
@@ -79,59 +92,71 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
     // Edit budget item
-    function budgetEdit(button) {
-      const row = button.closest("tr");
-    if (!row) return;
-
-    const budgetId = row.getAttribute("data-id");
-    const values = row.querySelectorAll("td");
-
-    if (button.textContent === "Edit") {
-        const fields = ["category", "amount"];
-        for (let i = 0; i < fields.length; i++) {
-            const text = values[i].textContent.replace("$", "").trim();
-            const input = document.createElement("input");
-
-            input.value = text;
-            input.name = fields[i];
-            values[i].textContent = "";
-            values[i].appendChild(input);
+    function budgetEdit(event) {
+        let button = event.target;
+    
+        if (!button || !button.closest) {
+            return;
         }
-        button.textContent = "Save";
-    } else {
-        const updatedBudgetItem = {
-            category: values[0].querySelector("input").value,
-            amount: parseFloat(values[1].querySelector("input").value)
-        };
 
-        fetch(`${apiConnect}/${budgetId}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(updatedBudgetItem)
-        })
-        .then(response => response.json())
-        .then(() => {
-            loadBudget();
-        })
+        button = button.closest(".edit-btn");
+        if (!button) {
+            return;
+        }
+    
+        let row = button.closest("tr");
+        if (!row) {
+            console.error("Error: No valid row found for editing.");
+            return;
+        }
+    
+        let budgetId = row.getAttribute("data-id");
+        let values = row.querySelectorAll("td");
+    
+        if (button.textContent === "Edit") {
+            ["category", "amount"].forEach((field, i) => {
+                const input = document.createElement("input");
+                input.value = values[i].textContent.replace("$", "").trim();
+                input.name = field;
+                values[i].textContent = "";
+                values[i].appendChild(input);
+            });
+            button.textContent = "Save";
+        } else {
+            const updatedBudgetItem = {
+                category: values[0].querySelector("input").value,
+                amount: parseFloat(values[1].querySelector("input").value),
+            };
+    
+            fetch(`${apiConnect}/${budgetId}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(updatedBudgetItem),
+            })
+            .then(response => response.json())
+            .then(() => {
+                loadBudget();
+            });
+        }
     }
-  }
+    
+    document.addEventListener("click", function (event) {
+        let editButton = event.target.closest(".edit-btn");
+        if (editButton) {
+            budgetEdit(event);
+        }
+    });
 
     // Delete budget item
     function budgetDelete(button) {
-      const row = button.closest("tr");
-      if (!row) return;
-
-      const budgetId = row.getAttribute("data-id");
-
-      if (confirm("Are you sure you want to delete this item?")) {
-          fetch(`${apiConnect}/${budgetId}`, {
-              method: "DELETE"
-          })
-          .then(() => {
-              loadBudget(); 
-          })
-      }
+        const row = button.closest("tr");
+        if (!row) return;
+    
+        itemToDelete = row; 
+        deleteType = "budget"; 
+        modal.style.display = "flex";
     }
+    
 
     document.addEventListener("click", function (event) {
       const button = event.target;
@@ -210,6 +235,7 @@ document.addEventListener('DOMContentLoaded', function() {
     })
 
 
+    // Progress bar for transactions and budget comparison
     function updateProgressBars() {
         const budgetData = document.getElementById("budget-summary");
         Array.from(budgetData.children).forEach(container => {
@@ -276,19 +302,139 @@ document.addEventListener('DOMContentLoaded', function() {
         infoModal.style.display = 'none';
       }
     });
-  
-      //Log out
-    document.getElementById('logout-btn').addEventListener('click', function() {
-      localStorage.removeItem('loggedin');
-      window.location.href = 'login.html';
+
+    document.addEventListener("click", function (event) {
+        if (event.target.classList.contains("delete-btn")) {
+            itemToDelete = event.target.closest("tr"); 
+            modal.style.display = "flex"; 
+        }
     });
   
-    if (loggedInUser && loggedInUser.firstName) {
-      document.getElementById('first-name').textContent = loggedInUser.firstName;
-    } else {
-      document.getElementById('first-name').textContent = 'Guest'; 
+
+    let itemToDelete = null; 
+    let deleteType = ""; 
+
+    document.addEventListener("click", function (event) {
+        const button = event.target;
+
+        if (button.classList.contains("delete-btn")) {
+            itemToDelete = button.closest("tr"); 
+            const parentTable = itemToDelete.closest("table");
+
+            if (parentTable.id === "budget-table") {
+                deleteType = "budget";
+            } else if (parentTable.id === "transaction-table") {
+                deleteType = "transaction";
+            } else {
+                return;
+            }
+
+            modal.style.display = "flex";
+        }
+    });
+
+    confirmBtn.addEventListener("click", function () {
+        if (!itemToDelete) {
+            return;
+        }
+
+        const itemId = itemToDelete.getAttribute("data-id");
+        let api = "";
+
+        if (deleteType === "budget") {
+            api = `${apiConnect}/${itemId}`; 
+        } else if (deleteType === "transaction") {
+            api = `${transactionApiConnect}/${itemId}`;
+        } else {
+            return;
+        }
+
+        fetch(api, {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        })
+        .then(response => {
+            return response.json();
+        })
+        .then(() => {
+            itemToDelete.remove();
+            itemToDelete = null;
+            modal.style.display = "none"; 
+            if (deleteType === "budget") {
+                loadBudget();
+            } else {
+                loadTransactions();
+            }
+        })
+    });
+
+    confirmBtn.addEventListener("click", function () {
+        if (deleteType === "budget") {
+            deleteBudgetItem();
+        } else if (deleteType === "transaction") {
+            deleteTransaction();
+        }
+    });
+
+    cancelBtn.addEventListener("click", function () {
+        itemToDelete = null; 
+        modal.style.display = "none"; 
+    });
+
+    function deleteBudgetItem() {
+        if (!itemToDelete) {
+            return;
+        }
+
+        const itemId = itemToDelete.getAttribute("data-id");
+        fetch(`${apiConnect}/${itemId}`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Error: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(() => {
+            modal.style.display = "none"; 
+            loadBudget();
+        })
     }
 
+    function fetchStart() {
+        let token = localStorage.getItem("token");
+        if (!token) {
+            window.location.href = "/";
+            return;
+        }
+    }
+      //Log out
+      function logout() {
+        let token = localStorage.getItem("token");
+
+        fetch("/api/logout", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token: token })
+        })
+        .then(response => response.json())
+        .then(data => {
+            localStorage.removeItem("token");
+
+            if (data.redirect) {
+                window.location.href = data.redirect; 
+            } else {
+                window.location.href = "/"; 
+            }
+        })
+        .catch(error => console.error("Logout Error:", error));
+        }
+        document.getElementById("logout-btn").addEventListener("click", logout);
+        window.onload = fetchStart;
     function createCell(text) {
         const cell = document.createElement('td');
         cell.textContent = text;
@@ -471,7 +617,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (target.classList.contains('delete-btn')) {
             const transactionId = row.getAttribute('data-id');
-            if (confirm("Are you sure you want to delete this transaction?")) {
+            if (confirmBtn) {
                 deleteTransaction(transactionId);
             }
         }
@@ -485,6 +631,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // Helper
     function getValue(id) {
         return document.getElementById(id).value;
     }
@@ -503,6 +650,87 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     loadTransactions();
   
+    
+    // Filter transactions by type, category, date
+    function filterTransactions() {
+        const rows = document.querySelectorAll("tr.transaction-row");
+        const filterCategory = document.getElementById('filter-category').value;
+        const filterDate = document.getElementById('filter-date').value;
+      const filterType = document.getElementById('filter-type').value.toLowerCase();
+      
+      rows.forEach(row => {
+          const transactionCategory = row.getAttribute("data-category");
+          const transactionDate = row.getAttribute("data-date");
+          const transactionType = row.getAttribute("data-type");
+          
+          const categoryMatch = filterCategory === "All" || transactionCategory === filterCategory;
+          const dateMatch = !filterDate || transactionDate === filterDate;
+          const typeMatch = filterType === "select" || transactionType === filterType;
+          
+          row.style.display = (categoryMatch && dateMatch && typeMatch) ? "table-row" : "none";
+        });
+    }
+    
+    // Quick add Salary, Housing, and Food after amount input is added
+    function handleQuickAdd(event) {
+        const valueAmount = parseFloat(quickAddInput.value);
+        if (!valueAmount || isNaN(valueAmount) || valueAmount <= 0) {
+            alert("Please enter a valid amount.");
+            return;
+        }
+        
+        const date = new Date().toISOString().split('T')[0];
+        const button = event.currentTarget;
+        const btnCategory = button.getAttribute('data-category');
+        
+        let transactionType, category, itemName;
+        if (button.textContent.trim().toLowerCase() === 'salary') {
+            transactionType = "income";
+            category = "N/A";
+            itemName = "Salary";
+        } else {
+            transactionType = "expense";
+            category = btnCategory;
+            itemName = "N/A";
+        }
+        
+        const newTransaction = {
+            type: transactionType,
+            amount: valueAmount,
+            category: category,
+            itemName: itemName,
+            date: date
+        };
+        
+        fetch(transactionApiConnect, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+            body: JSON.stringify(newTransaction)
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => {
+                    throw new Error(err.error || "Failed to add transaction");
+                });
+            }
+            return response.json();
+        })
+        .then(() => {
+            quickAddInput.value = ''; 
+            loadTransactions(); 
+        })
+    }
+    
+    if (transactionBtn) {
+        transactionBtn.addEventListener('click', addTransaction);
+  }
+  quickAddButtons.forEach(function(btn) {
+      btn.addEventListener('click', handleQuickAdd);
+    });
+
     // Summary of income, expenses, and balance
     function updateSummary(responseData) {
         const transactions = responseData.transactions || responseData; 
@@ -548,86 +776,6 @@ document.addEventListener('DOMContentLoaded', function() {
       filterDate.addEventListener('change', filterTransactions);
       filterType.addEventListener('change', filterTransactions);
     }
-    
-    // Filter transactions by type, category, date
-    function filterTransactions() {
-      const rows = document.querySelectorAll("tr.transaction-row");
-      const filterCategory = document.getElementById('filter-category').value;
-      const filterDate = document.getElementById('filter-date').value;
-      const filterType = document.getElementById('filter-type').value.toLowerCase();
-    
-      rows.forEach(row => {
-        const transactionCategory = row.getAttribute("data-category");
-        const transactionDate = row.getAttribute("data-date");
-        const transactionType = row.getAttribute("data-type");
-    
-        const categoryMatch = filterCategory === "All" || transactionCategory === filterCategory;
-        const dateMatch = !filterDate || transactionDate === filterDate;
-        const typeMatch = filterType === "select" || transactionType === filterType;
-    
-        row.style.display = (categoryMatch && dateMatch && typeMatch) ? "table-row" : "none";
-      });
-    }
-    
-    // Quick add Salary, Housing, and Food after amount input is added
-    function handleQuickAdd(event) {
-        const valueAmount = parseFloat(quickAddInput.value);
-        if (!valueAmount || isNaN(valueAmount) || valueAmount <= 0) {
-            alert("Please enter a valid amount.");
-            return;
-        }
-   
-        const date = new Date().toISOString().split('T')[0];
-        const button = event.currentTarget;
-        const btnCategory = button.getAttribute('data-category');
-   
-        let transactionType, category, itemName;
-        if (button.textContent.trim().toLowerCase() === 'salary') {
-            transactionType = "income";
-            category = "N/A";
-            itemName = "Salary";
-        } else {
-            transactionType = "expense";
-            category = btnCategory;
-            itemName = "N/A";
-        }
-   
-        const newTransaction = {
-            type: transactionType,
-            amount: valueAmount,
-            category: category,
-            itemName: itemName,
-            date: date
-        };
-   
-        fetch(transactionApiConnect, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            },
-            body: JSON.stringify(newTransaction)
-        })
-        .then(response => {
-            if (!response.ok) {
-                return response.json().then(err => {
-                    throw new Error(err.error || "Failed to add transaction");
-                });
-            }
-            return response.json();
-        })
-        .then(() => {
-            quickAddInput.value = ''; 
-            loadTransactions(); 
-        })
-   }
-    
-  if (transactionBtn) {
-      transactionBtn.addEventListener('click', addTransaction);
-  }
-  quickAddButtons.forEach(function(btn) {
-      btn.addEventListener('click', handleQuickAdd);
-  });
     loadBudget();
     loadTransactions();
 });

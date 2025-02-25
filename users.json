@@ -3,5 +3,10 @@
         "firstName": "Water",
         "lastName": "Fish",
         "password": "Water2020!"
+    },
+    "wind@outlook.com": {
+        "firstName": "Earth",
+        "lastName": "Wind",
+        "password": "Wind2020!"
     }
 }

@@ -77,7 +77,7 @@ def update_transaction(transaction_id):
 @app.route('/transactions/<int:transaction_id>', methods=['DELETE'])
 def delete_transaction(transaction_id):
     transactions = load_transactions()
-    updated_transactions = [tx for tx in transactions if tx["id"] != transaction_id]
+    updated_transactions = [transactions for transactions in transactions if transactions["id"] != transaction_id]
 
     if len(updated_transactions) == len(transactions): 
         return jsonify({"error": "Transaction does not exist"}), 404
