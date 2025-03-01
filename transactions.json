@@ -2,25 +2,28 @@
     {
         "type": "income",
         "amount": 2000,
-        "category": "None",
-        "itemName": "Salary",
-        "date": "2025-02-03",
+        "category": "N/A",
+        "itemName": "N/A",
+        "date": "2025-03-01",
+        "email": "water@outlook.com",
         "id": 1
     },
     {
         "type": "Expense",
-        "amount": 50,
+        "amount": 30,
         "category": "Food",
-        "itemName": "Store",
-        "date": "2025-02-24",
+        "itemName": "N/A",
+        "date": "2025-03-01",
+        "email": "water@outlook.com",
         "id": 2
     },
     {
-        "type": "expense",
-        "amount": 120,
-        "category": "Food",
-        "itemName": "N/A",
-        "date": "2025-02-24",
+        "type": "Expense",
+        "amount": 300,
+        "category": "Transportation",
+        "itemName": "Vehicle",
+        "date": "2025-03-03",
+        "email": "water@outlook.com",
         "id": 3
     },
     {
@@ -28,15 +31,26 @@
         "amount": 1200,
         "category": "Housing",
         "itemName": "N/A",
-        "date": "2025-02-24",
+        "date": "2025-03-01",
+        "email": "water@outlook.com",
         "id": 4
     },
     {
-        "type": "Expense",
-        "amount": 10,
-        "category": "Bills",
-        "itemName": "Phone",
-        "date": "2025-02-03",
+        "type": "income",
+        "amount": 4000,
+        "category": "N/A",
+        "itemName": "N/A",
+        "date": "2025-03-01",
+        "email": "storm@outlook.com",
         "id": 5
+    },
+    {
+        "type": "expense",
+        "amount": 1800,
+        "category": "Housing",
+        "itemName": "N/A",
+        "date": "2025-03-01",
+        "email": "storm@outlook.com",
+        "id": 6
     }
 ]

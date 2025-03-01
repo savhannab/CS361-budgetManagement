@@ -7,17 +7,17 @@ users_file, tokens_file = "users.json", "tokens.json"
 # Ensure JSON files exist
 for file in [users_file, tokens_file]:
     if not os.path.exists(file):
-        with open(file, "w") as file:
-            json.dump({}, file)
+        with open(file, "w") as f:
+            json.dump({}, f)
 
 # Load & Save JSON Data
 def load_json(file):
-    with open(file, "r") as file:
-        return json.load(file)
+    with open(file, "r") as f:
+        return json.load(f)
 
 def save_json(file, data):
-    with open(file, "w") as file:
-        json.dump(data, file, indent=4)
+    with open(file, "w") as f:
+        json.dump(data, f, indent=4)
 
 # Validate password
 def is_valid_password(password):
@@ -65,11 +65,12 @@ def register():
     if email in users:
         return jsonify({"error": "User already exists"}), 409
 
-    # Save new user
+    # Save new user (Add empty transactions list)
     users[email] = {
         "firstName": data["firstName"],
         "lastName": data["lastName"],
-        "password": data["password"]
+        "password": data["password"],
+        "transactions": []  
     }
     save_json(users_file, users)
 
@@ -85,28 +86,30 @@ def register():
     }), 201
 
 # Login
+# Login
 @app.route("/api/login", methods=["POST"])
 def login():
     data = request.get_json()
     users = load_json(users_file)
     tokens = load_json(tokens_file)  
 
-    email = data["email"].strip().lower()
+    email = data.get("email", "").strip().lower()
+    password = data.get("password", "")
 
-    # Validate user 
-    if email in users and users[email]["password"] == data["password"]:
+    if email in users and users[email]["password"] == password:
         token = generate_token(email)
-        tokens[email] = token 
-        save_json(tokens_file, tokens) 
+        tokens[email] = token
+        save_json(tokens_file, tokens)
 
         return jsonify({
             "message": "Login successful",
             "token": token,
-            "redirect": "/home"
+            "redirect": "/home",
+            "email": email,  
+            "transactions": users[email].get("transactions", [])
         }), 200
 
     return jsonify({"error": "Invalid username or password"}), 401
-
 
 # Logout
 @app.route("/api/logout", methods=["POST"])

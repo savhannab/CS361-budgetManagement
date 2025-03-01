@@ -1,4 +1,4 @@
-// Handle switching between Sign Up and Log In forms
+// Switch between forms
 document.getElementById("signing-up").addEventListener("click", function (event) {
     event.preventDefault();
     document.querySelector(".selection.active").classList.remove("active");
@@ -13,26 +13,28 @@ document.getElementById("logging-in").addEventListener("click", function (event)
     this.parentElement.classList.add("active");
     document.getElementById("login").style.display = "block";
     document.getElementById("signup").style.display = "none";
+    attachLoginListener();
 });
 
-// Handle password visibility toggle for all password fields
+// Password visibility
 document.querySelectorAll(".password-view-icon").forEach(icon => {
     icon.addEventListener("click", function () {
         const input = this.previousElementSibling;
+        const eyeIcon = this.querySelector("i");
 
         if (input.type === "password") {
             input.type = "text";
-            this.querySelector("i").classList.remove("fa-eye");
-            this.querySelector("i").classList.add("fa-eye-slash");
+            eyeIcon.classList.remove("fa-eye");
+            eyeIcon.classList.add("fa-eye-slash");
         } else {
             input.type = "password";
-            this.querySelector("i").classList.remove("fa-eye-slash");
-            this.querySelector("i").classList.add("fa-eye");
+            eyeIcon.classList.remove("fa-eye-slash");
+            eyeIcon.classList.add("fa-eye");
         }
     });
 });
 
-// Handle Sign Up Form Submission
+// Create account
 document.getElementById("signup-form").addEventListener("submit", function (event) {
     event.preventDefault(); 
 
@@ -69,6 +71,7 @@ document.getElementById("signup-form").addEventListener("submit", function (even
             errorElement.style.display = "block";
         } else {
             localStorage.setItem("token", data.token);
+            localStorage.setItem("loggedin", JSON.stringify({ email: email }));
             window.location.href = "/home";
         }
     })
@@ -79,40 +82,62 @@ document.getElementById("signup-form").addEventListener("submit", function (even
     });
 });
 
-// Handle Login Form Submission
-document.getElementById("login-form").addEventListener("submit", function (event) {
-    event.preventDefault();
+// Login
+function attachLoginListener() {
+    const loginForm = document.getElementById("login-form");
 
-    const email = document.getElementById("login-email").value.trim();
-    const password = document.getElementById("login-password").value;
-    const errorElement = document.getElementById("confirm-error");
+    if (!loginForm || loginForm.dataset.listener === "true") return;
+    loginForm.dataset.listener = "true";
 
-    if (!email || !password) {
-        errorElement.textContent = "Email and password are required.";
-        errorElement.style.display = "block";
-        return;
-    }
+    loginForm.addEventListener("submit", function (event) {
+        event.preventDefault();
 
-    fetch("/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.error) {
-            errorElement.textContent = data.error;
-            errorElement.style.display = "block";
-        } else {
-            localStorage.setItem("token", data.token);  
-            window.location.href = data.redirect;  
+        const emailInput = document.getElementById("login-email");
+        const passwordInput = document.getElementById("login-password");
+        const errorElement = document.getElementById("confirm-error");
+
+        if (!emailInput || !passwordInput) {
+            return;
         }
+
+        const email = emailInput.value.trim();
+        const password = passwordInput.value.trim();
+
+        if (!email || !password) {
+            errorElement.textContent = "All fields required.";
+            errorElement.style.display = "block";
+            return;
+        }
+
+        fetch("/api/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                errorElement.textContent = data.error;
+                errorElement.style.color = "red";
+                errorElement.style.textAlign = "center";
+                errorElement.style.display = "block";
+            } else {
+                localStorage.setItem("token", data.token);
+                localStorage.setItem("loggedin", JSON.stringify({ email: email }));
+                window.location.href = data.redirect;
+            }
+        })
+        .catch(error => {
+            console.error("Error during login:", error);
+            errorElement.textContent = "Error, try again.";
+            errorElement.style.display = "block";
+        });
     });
-    errorElement.textContent = "Invalid credentials";
-    errorElement.style.color = "red";
-    errorElement.style.textAlign = "center";
-    errorElement.style.display = "block";
-});
+}
+
+if (document.getElementById("login").style.display !== "none") {
+    attachLoginListener();
+}
 
 // Guest Login
 document.querySelectorAll(".guest-btn").forEach(button => {
@@ -121,5 +146,10 @@ document.querySelectorAll(".guest-btn").forEach(button => {
     });
 });
 
+document.addEventListener("DOMContentLoaded", function () {
+    const loggedInUser = JSON.parse(localStorage.getItem("loggedin"));
 
-
+    if (loggedInUser && loggedInUser.email) {
+        window.location.href = "/home";
+    }
+});
