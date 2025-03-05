@@ -1,26 +1,16 @@
 [
   {
     "category": "Food",
-    "amount": 400.0,
-    "spent": 90,
-    "id": 1
-  },
-  {
-    "category": "Bills",
-    "amount": 60.0,
-    "id": 2,
-    "spent": 0
-  },
-  {
-    "category": "Transportation",
-    "amount": 500.0,
-    "id": 3,
+    "amount": 300,
+    "email": "water@outlook.com",
+    "id": 5,
     "spent": 0
   },
   {
     "category": "Housing",
-    "amount": 1500,
-    "id": 4,
+    "amount": 2000.0,
+    "email": "water@outlook.com",
+    "id": 6,
     "spent": 0
   }
 ]

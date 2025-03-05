@@ -10,7 +10,7 @@
     },
     {
         "type": "Expense",
-        "amount": 30,
+        "amount": 35,
         "category": "Food",
         "itemName": "N/A",
         "date": "2025-03-01",
@@ -19,16 +19,7 @@
     },
     {
         "type": "Expense",
-        "amount": 300,
-        "category": "Transportation",
-        "itemName": "Vehicle",
-        "date": "2025-03-03",
-        "email": "water@outlook.com",
-        "id": 3
-    },
-    {
-        "type": "expense",
-        "amount": 1200,
+        "amount": 1500,
         "category": "Housing",
         "itemName": "N/A",
         "date": "2025-03-01",
@@ -51,6 +42,15 @@
         "itemName": "N/A",
         "date": "2025-03-01",
         "email": "storm@outlook.com",
+        "id": 6
+    },
+    {
+        "type": "expense",
+        "amount": 20,
+        "category": "Food",
+        "itemName": "N/A",
+        "date": "2025-03-05",
+        "email": "water@outlook.com",
         "id": 6
     }
 ]

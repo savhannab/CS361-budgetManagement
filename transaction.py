@@ -84,7 +84,6 @@ def update_transaction(transaction_id):
 # Delete a transaction
 @app.route('/transactions/<int:transaction_id>', methods=['DELETE'])
 def delete_transaction(transaction_id):
-    """Deletes a transaction, ensuring that only the user who created it can delete it."""
     email = request.args.get("email") 
     if not email:
         return jsonify({"error": "User email is required"}), 400
