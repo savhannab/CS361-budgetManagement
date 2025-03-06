@@ -23,9 +23,9 @@ document.addEventListener("DOMContentLoaded", function () {
     var transactions = JSON.parse(localStorage.getItem("transactions")) || [];
     var itemToDelete = null;
     var deleteType = "";
-    var hasCheckedLogin = false;
-    var hasLoadedBudget = false;
-    var hasLoadedTransactions = false;
+    var checkLogin = false;
+    var checkBudget = false;
+    var checkTransactions = false;
 
     function getUserEmail() {
         var user = JSON.parse(localStorage.getItem("loggedin"));
@@ -37,8 +37,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function returnLoginPage() {
-        if (hasCheckedLogin) return;
-        hasCheckedLogin = true; 
+        if (checkLogin) return;
+        checkLogin = true; 
         var email = getUserEmail();
     
         if (!email) {
@@ -49,13 +49,13 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
     
-        if (!hasLoadedBudget) {
-            hasLoadedBudget = true;
+        if (!checkBudget) {
+            checkBudget = true;
             loadBudget();
         }
     
-        if (!hasLoadedTransactions) {
-            hasLoadedTransactions = true;
+        if (!checkTransactions) {
+            checkTransactions = true;
             loadTransactions();
         }
     }
@@ -176,9 +176,9 @@ document.addEventListener("DOMContentLoaded", function () {
             } else {
                 localStorage.setItem("token", data.token);
                 localStorage.setItem("loggedin", JSON.stringify({ email }));
-                hasCheckedLogin = true;
-                hasLoadedBudget = true;
-                hasLoadedTransactions = true;
+                checkLogin = true;
+                checkBudget = true;
+                checkTransactions = true;
                 window.location.href = data.redirect;
             }
         })
@@ -236,7 +236,6 @@ document.addEventListener("DOMContentLoaded", function () {
         row.setAttribute("data-id", item.id);
         row.appendChild(createCell(item.category));
         row.appendChild(createCell("$" + parseFloat(item.amount).toFixed(2)));
-
         var actionsCell = document.createElement("td");
         var deleteBtn = createButton("Delete", "delete-btn", function () {
             itemToDelete = row;
@@ -306,7 +305,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     var addBudgetBtn = document.getElementById("add-category");
-    
     if (addBudgetBtn) {
         addBudgetBtn.addEventListener("click", addBudget);
     }
@@ -341,9 +339,6 @@ document.addEventListener("DOMContentLoaded", function () {
             categoryInput.value = "";
             amountInput.value = "";
         })
-        .catch(error => {
-            console.error("Error adding budget:", error);
-        });
     }
 
     function createBudgetItem(item) {
@@ -351,22 +346,19 @@ document.addEventListener("DOMContentLoaded", function () {
         container.classList.add("budget-item");
         container.setAttribute("data-category", item.category);
         container.setAttribute("data-allocated", item.amount);
-    
         var label = document.createElement("div");
         label.textContent = item.category;
         container.appendChild(label);
-    
         var progressContainer = document.createElement("div");
         progressContainer.classList.add("progress-container");
         container.appendChild(progressContainer);
-    
         return container;
     }
 
     function deleteBudgetItem(budgetId) {
-        var url = `${budgetapi}/${budgetId}`;
+        var link = `${budgetapi}/${budgetId}`;
     
-        fetch(url, {
+        fetch(link, {
             method: "DELETE"
         })
         .then(response => {
@@ -403,10 +395,10 @@ document.addEventListener("DOMContentLoaded", function () {
         var email = getUserEmail();
         if (!email) return;
     
-        let url = new URL(transactionapi);
-        url.searchParams.append("email", email);
+        var link = new URL(transactionapi);
+        link.searchParams.append("email", email);
     
-        fetch(url)
+        fetch(link)
             .then(response => response.json())
             .then(function (data) {
                 transactions = data;
@@ -557,9 +549,9 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
     
-        var url = `${transactionapi}/${transactionId}?email=${encodeURIComponent(email)}`;
+        var link = `${transactionapi}/${transactionId}?email=${encodeURIComponent(email)}`;
     
-        fetch(url, { method: "DELETE" })
+        fetch(link, { method: "DELETE" })
             .then(response => {
                 if (!response.ok) {
                     return response.text().then(text => { throw new Error(`Failed to delete transaction: ${text}`); });
@@ -606,9 +598,9 @@ document.addEventListener("DOMContentLoaded", function () {
         var email = getUserEmail();
         if (!email) return;
     
-        var url = transactionapi + "?email=" + encodeURIComponent(email);
+        var link = transactionapi + "?email=" + encodeURIComponent(email);
     
-        fetch(url)
+        fetch(link)
             .then(response => response.json())
             .then(function (data) {
                 transactions = data;
@@ -671,11 +663,7 @@ document.addEventListener("DOMContentLoaded", function () {
             email = user.email;
         }
 
-        if (!email) {
-            return;
-        }
-    
-        if (!type || isNaN(amount) || amount <= 0 || !category || !itemName || !date) {
+        if (!type || isNaN(amount) || amount <= 0 || !category || !itemName || !date || !email) {
             return;
         }
     
@@ -911,12 +899,13 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     } 
 
+    // Retrieve recommendation from backend
     function fetchRecommendations() {
         const income = parseFloat(document.getElementById("income-total").textContent.replace("$", "")) || 0;
         const expenses = parseFloat(document.getElementById("expense-total").textContent.replace("$", "")) || 0;
         const balance = parseFloat(document.getElementById("balance-total").textContent.replace("$", "")) || 0;
     
-        fetch("http://127.0.0.1:5003/recommend", {
+        fetch(recommendapi, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ income, expenses, balance })
@@ -941,6 +930,7 @@ document.addEventListener("DOMContentLoaded", function () {
         recommendationOutput.style.display = "block";
     }
     
+    // Hide recommendation and change button to original setting
     function hideRecommendations() {
         clearRecommendations();
         recommendationOutput.style.display = "none";
@@ -948,6 +938,7 @@ document.addEventListener("DOMContentLoaded", function () {
         recommendHide = false;
     }
 
+    //Clear recommendation
     function clearRecommendations() {
         while (recommendationOutput.firstChild) {
             recommendationOutput.removeChild(recommendationOutput.firstChild);
