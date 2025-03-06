@@ -10,16 +10,7 @@
     },
     {
         "type": "Expense",
-        "amount": 35,
-        "category": "Food",
-        "itemName": "N/A",
-        "date": "2025-03-01",
-        "email": "water@outlook.com",
-        "id": 2
-    },
-    {
-        "type": "Expense",
-        "amount": 1500,
+        "amount": 1700,
         "category": "Housing",
         "itemName": "N/A",
         "date": "2025-03-01",
@@ -28,20 +19,11 @@
     },
     {
         "type": "expense",
-        "amount": 20,
-        "category": "Food",
-        "itemName": "N/A",
-        "date": "2025-03-05",
-        "email": "water@outlook.com",
-        "id": 6
-    },
-    {
-        "type": "expense",
-        "amount": 10,
+        "amount": 120,
         "category": "Food",
         "itemName": "N/A",
         "date": "2025-03-06",
         "email": "water@outlook.com",
-        "id": 7
+        "id": 3
     }
 ]

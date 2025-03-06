@@ -8,14 +8,14 @@
   },
   {
     "category": "Housing",
-    "amount": 2000.0,
+    "amount": 1800.0,
     "email": "water@outlook.com",
     "id": 6,
     "spent": 0
   },
   {
     "category": "Transportation",
-    "amount": 350,
+    "amount": 400.0,
     "email": "water@outlook.com",
     "id": 7,
     "spent": 0

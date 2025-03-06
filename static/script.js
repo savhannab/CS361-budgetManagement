@@ -355,7 +355,19 @@ document.addEventListener("DOMContentLoaded", function () {
         return container;
     }
 
-    function deleteBudgetItem(budgetId) {
+    function deleteBudgetItem(budgetItem) {
+        if (!budgetItem || !(budgetItem instanceof HTMLElement)) {
+            console.error("Invalid budget item:", budgetItem);
+            return;
+        }
+    
+        var budgetId = budgetItem.getAttribute("data-id");
+    
+        if (!budgetId) {
+            console.error("Budget ID is missing!");
+            return;
+        }
+    
         var link = `${budgetapi}/${budgetId}`;
     
         fetch(link, {
@@ -368,28 +380,11 @@ document.addEventListener("DOMContentLoaded", function () {
             return response.json();
         })
         .then(() => {
-            loadBudget();  
+            loadBudget();
         })
         .catch(error => console.error("Delete error:", error));
     }
 
-    if (confirmBtn) {
-        confirmBtn.addEventListener("click", function () {
-            if (!itemToDelete) return;
-    
-            var itemId = itemToDelete.getAttribute("data-id");
-    
-            if (deleteType === "budget") {
-                deleteBudgetItem(itemId);
-            } else {
-                deleteTransaction(itemId);
-            }
-    
-            modal.style.display = "none";
-            itemToDelete = null;
-        });
-    }    
-       
     // Transactions Microservice
     function loadTransactions() {
         var email = getUserEmail();
@@ -487,7 +482,7 @@ document.addEventListener("DOMContentLoaded", function () {
         var category = document.getElementById("expense-category").value;
         var itemName = document.getElementById("item-name").value;
         var date = document.getElementById("date").value;
-
+    
         if (!type || (type !== "income" && type !== "expense")) {
             return;
         }
@@ -508,7 +503,7 @@ document.addEventListener("DOMContentLoaded", function () {
             date: date,
             email: email
         };
-
+    
         fetch(transactionapi, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -521,6 +516,11 @@ document.addEventListener("DOMContentLoaded", function () {
             return response.json();
         })
         .then(() => {
+            document.getElementById("amount").value = "";
+            document.getElementById("expense-category").value = "";
+            document.getElementById("item-name").value = "";
+            document.getElementById("date").value = "";
+    
             fetch(transactionapi + "?email=" + encodeURIComponent(email))
                 .then(response => response.json())
                 .then(function (data) {
@@ -538,61 +538,6 @@ document.addEventListener("DOMContentLoaded", function () {
         })
     }
     
-    if (transactionBtn) {
-        transactionBtn.addEventListener("click", addTransaction);
-    }
-    
-
-    function deleteTransaction(transactionId) {
-        var email = getUserEmail();
-        if (!email) {
-            return;
-        }
-    
-        var link = `${transactionapi}/${transactionId}?email=${encodeURIComponent(email)}`;
-    
-        fetch(link, { method: "DELETE" })
-            .then(response => {
-                if (!response.ok) {
-                    return response.text().then(text => { throw new Error(`Failed to delete transaction: ${text}`); });
-                }
-                return response.json();
-            })
-            .then(() => {
-                loadTransactions();  
-                updateProgressBars();
-            })
-    }
-    
-    
-    if (confirmBtn) {
-        confirmBtn.addEventListener("click", function () {
-            if (!itemToDelete) return;
-    
-            var itemId = itemToDelete.getAttribute("data-id");
-            var api;
-    
-            if (deleteType === "budget") {
-                api = budgetapi + "/" + itemId;
-            } else {
-                api = transactionapi + "/" + itemId;
-            }
-    
-            fetch(api, { method: "DELETE" })
-                .then(response => response.json())
-                .then(function () {
-                    itemToDelete.remove();
-                    modal.style.display = "none";
-                    itemToDelete = null;
-    
-                    if (deleteType === "budget") {
-                        loadBudget();
-                    } else {
-                        loadTransactions();
-                    }
-                });
-        });
-    }
     
     function loadTransactions() {
         var email = getUserEmail();
@@ -690,6 +635,29 @@ document.addEventListener("DOMContentLoaded", function () {
         .then(() => {
             loadTransactions(); 
         })
+    }
+
+  
+
+    function deleteTransaction(transactionId) {
+        var email = getUserEmail();
+        if (!email) {
+            return;
+        }
+    
+        var link = `${transactionapi}/${transactionId}?email=${encodeURIComponent(email)}`;
+    
+        fetch(link, { method: "DELETE" })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => { throw new Error(`Failed to delete transaction: ${text}`); });
+                }
+                return response.json();
+            })
+            .then(() => {
+                loadTransactions();  
+                updateProgressBars();
+            })
     }
     
     // Helper
