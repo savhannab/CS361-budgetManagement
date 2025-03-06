@@ -27,24 +27,6 @@
         "id": 4
     },
     {
-        "type": "income",
-        "amount": 4000,
-        "category": "N/A",
-        "itemName": "N/A",
-        "date": "2025-03-01",
-        "email": "storm@outlook.com",
-        "id": 5
-    },
-    {
-        "type": "expense",
-        "amount": 1800,
-        "category": "Housing",
-        "itemName": "N/A",
-        "date": "2025-03-01",
-        "email": "storm@outlook.com",
-        "id": 6
-    },
-    {
         "type": "expense",
         "amount": 20,
         "category": "Food",
@@ -52,5 +34,14 @@
         "date": "2025-03-05",
         "email": "water@outlook.com",
         "id": 6
+    },
+    {
+        "type": "expense",
+        "amount": 10,
+        "category": "Food",
+        "itemName": "N/A",
+        "date": "2025-03-06",
+        "email": "water@outlook.com",
+        "id": 7
     }
 ]

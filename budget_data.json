@@ -12,5 +12,12 @@
     "email": "water@outlook.com",
     "id": 6,
     "spent": 0
+  },
+  {
+    "category": "Transportation",
+    "amount": 350,
+    "email": "water@outlook.com",
+    "id": 7,
+    "spent": 0
   }
 ]

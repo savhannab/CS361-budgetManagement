@@ -4,11 +4,5 @@
         "lastName": "Fish",
         "password": "Water2020!",
         "transactions": []
-    },
-    "storm@outlook.com": {
-        "firstName": "Tornado",
-        "lastName": "Storm",
-        "password": "Storm2020!",
-        "transactions": []
     }
 }

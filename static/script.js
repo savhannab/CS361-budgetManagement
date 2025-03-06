@@ -1,5 +1,7 @@
 const budgetapi = "http://127.0.0.1:5000/budget";
 const transactionapi = "http://127.0.0.1:5001/transactions";
+const loginapi = "http://127.0.0.1:5002/api";
+const recommendapi = "http://127.0.0.1:5003/recommend";
 
 document.addEventListener("DOMContentLoaded", function () {
     var transactionTable = document.getElementById("transaction-table");
@@ -21,6 +23,9 @@ document.addEventListener("DOMContentLoaded", function () {
     var transactions = JSON.parse(localStorage.getItem("transactions")) || [];
     var itemToDelete = null;
     var deleteType = "";
+    var hasCheckedLogin = false;
+    var hasLoadedBudget = false;
+    var hasLoadedTransactions = false;
 
     function getUserEmail() {
         var user = JSON.parse(localStorage.getItem("loggedin"));
@@ -32,16 +37,153 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function returnLoginPage() {
+        if (hasCheckedLogin) return;
+        hasCheckedLogin = true; 
         var email = getUserEmail();
-        if (email === null) {
-            window.location.href = "/";
+    
+        if (!email) {
+            if (!sessionStorage.getItem("redirected")) {  
+                sessionStorage.setItem("redirected", "true");
+                window.location.href = "/";
+            }
             return;
         }
-        loadTransactions();
-        loadBudget();
+    
+        if (!hasLoadedBudget) {
+            hasLoadedBudget = true;
+            loadBudget();
+        }
+    
+        if (!hasLoadedTransactions) {
+            hasLoadedTransactions = true;
+            loadTransactions();
+        }
     }
-    window.onload = returnLoginPage;
+    window.onload = returnLoginPage;    
 
+    // Switch between login & signup forms
+    document.getElementById("signing-up")?.addEventListener("click", function (event) {
+        event.preventDefault();
+        document.querySelector(".selection.active").classList.remove("active");
+        this.parentElement.classList.add("active");
+        document.getElementById("signup").style.display = "block";
+        document.getElementById("login").style.display = "none";
+    });
+
+    document.getElementById("logging-in")?.addEventListener("click", function (event) {
+        event.preventDefault();
+        document.querySelector(".selection.active").classList.remove("active");
+        this.parentElement.classList.add("active");
+        document.getElementById("login").style.display = "block";
+        document.getElementById("signup").style.display = "none";
+        attachLoginListener();
+    });
+
+    // Password visibility
+    document.querySelectorAll(".password-view-icon").forEach(icon => {
+        icon.addEventListener("click", function () {
+            const input = this.previousElementSibling;
+            input.type = input.type === "password" ? "text" : "password";
+            this.querySelector("i").classList.toggle("fa-eye");
+            this.querySelector("i").classList.toggle("fa-eye-slash");
+        });
+    });
+
+    // Signup
+    document.getElementById("signup-form")?.addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        const firstName = document.getElementById("first-name").value.trim();
+        const lastName = document.getElementById("last-name").value.trim();
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value;
+        const confirmPassword = document.getElementById("confirmPassword").value;
+        const errorElement = document.getElementById("confirm-error");
+
+        if (!firstName || !lastName || !email || !password || !confirmPassword) {
+            errorElement.textContent = "All fields are required.";
+            errorElement.style.color = "red";
+            errorElement.style.display = "block";
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            errorElement.textContent = "Passwords do not match.";
+            errorElement.style.display = "block";
+            errorElement.style.color = "red";
+            return;
+        }
+
+        fetch(`${loginapi}/users`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ firstName, lastName, email, password, confirmPassword })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                errorElement.textContent = data.error;
+                errorElement.style.display = "block";
+            } else {
+                localStorage.setItem("token", data.token);
+                localStorage.setItem("loggedin", JSON.stringify({ email }));
+                window.location.href = "/home";
+            }
+        })
+        .catch(error => {
+            console.error("Signup Error:", error);
+        });
+    });
+
+
+    // Login
+    function attachLoginListener() {
+        const loginForm = document.getElementById("login-form");
+        if (!loginForm || loginForm.dataset.listener === "true") return;
+        
+        loginForm.dataset.listener = "true"; 
+        loginForm.addEventListener("submit", function (event) {
+            event.preventDefault();
+            loginUser();
+        });
+    }
+
+    function loginUser() {
+        const emailInput = document.getElementById("login-email");
+        const passwordInput = document.getElementById("login-password");
+        const errorElement = document.getElementById("confirm-error");
+    
+        const email = emailInput.value.trim();
+        const password = passwordInput.value.trim();
+    
+        if (!email || !password) {
+            errorElement.textContent = "All fields required.";
+            errorElement.style.color = "red";
+            errorElement.style.display = "block";
+            return;
+        }
+    
+        fetch(`${loginapi}/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                errorElement.textContent = data.error;
+                errorElement.style.display = "block";
+            } else {
+                localStorage.setItem("token", data.token);
+                localStorage.setItem("loggedin", JSON.stringify({ email }));
+                hasCheckedLogin = true;
+                hasLoadedBudget = true;
+                hasLoadedTransactions = true;
+                window.location.href = data.redirect;
+            }
+        })
+    }
+    
     // Info about page functionality and purpose
     if (infoTooltip) {
         infoTooltip.addEventListener("click", function () {
@@ -69,6 +211,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 var budgetTable = document.getElementById("budget-table");
                 var budgetSummary = document.getElementById("budget-summary"); 
 
+                if (!budgetTable || !budgetSummary) {
+                    return;
+                }
                 while (budgetTable.firstChild) {
                     budgetTable.removeChild(budgetTable.firstChild);
                 }
@@ -342,7 +487,6 @@ document.addEventListener("DOMContentLoaded", function () {
     function addTransaction() {
         var email = getUserEmail();
         if (!email) {
-            alert("User is not logged in.");
             return;
         }
     
@@ -360,15 +504,7 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
     
-        if (!category) {
-            return;
-        }
-    
-        if (!itemName) {
-            return;
-        }
-    
-        if (!date) {
+        if (!category || !itemName || !date) {
             return;
         }
     
@@ -759,7 +895,65 @@ document.addEventListener("DOMContentLoaded", function () {
         localStorage.removeItem("loggedin");
         window.location.href = "/";
     }
+
+    //Recommendation Microservice
+    const recommendationButton = document.getElementById("generate-recommendation");
+    const recommendationOutput = document.getElementById("recommendation-output");
+    var recommendHide = false;
+
+    if (recommendationButton) {
+        recommendationButton.addEventListener("click", function () {
+            if (recommendHide) {
+                hideRecommendations();
+            } else {
+                fetchRecommendations();
+            }
+        });
+    } 
+
+    function fetchRecommendations() {
+        const income = parseFloat(document.getElementById("income-total").textContent.replace("$", "")) || 0;
+        const expenses = parseFloat(document.getElementById("expense-total").textContent.replace("$", "")) || 0;
+        const balance = parseFloat(document.getElementById("balance-total").textContent.replace("$", "")) || 0;
     
+        fetch("http://127.0.0.1:5003/recommend", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ income, expenses, balance })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.recommendation) {
+                showRecommendation(data.recommendation);
+                recommendHide = true;
+                recommendationButton.textContent = "Hide Recommendations";
+            }
+        });
+    }
+    
+    function showRecommendation(recommendation) {
+        clearRecommendations();
+    
+        const p = document.createElement("p");
+        p.textContent = recommendation;
+        p.style.fontWeight = "bold"; 
+        recommendationOutput.appendChild(p);
+        recommendationOutput.style.display = "block";
+    }
+    
+    function hideRecommendations() {
+        clearRecommendations();
+        recommendationOutput.style.display = "none";
+        recommendationButton.textContent = "Generate Recommendations";
+        recommendHide = false;
+    }
+
+    function clearRecommendations() {
+        while (recommendationOutput.firstChild) {
+            recommendationOutput.removeChild(recommendationOutput.firstChild);
+        }
+    }
+
     loadBudget();
     loadTransactions();
     updateProgressBars();
