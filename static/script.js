@@ -27,6 +27,29 @@ document.addEventListener("DOMContentLoaded", function () {
     var checkBudget = false;
     var checkTransactions = false;
 
+        // Info about page functionality and purpose
+    if (infoTooltip) {
+        infoTooltip.addEventListener("click", function () {
+            infoModal.style.display = "block";
+        });
+    }
+    
+    if (closeInfoModal) {
+        closeInfoModal.addEventListener("click", function () {
+            infoModal.style.display = "none";
+        });
+    }
+
+    window.addEventListener("click", function (event) {
+        if (event.target === infoModal) {
+            infoModal.style.display = "none";
+        }
+    });
+
+    //**************************************************************************
+    // Login
+    //**************************************************************************
+    
     function getUserEmail() {
         var user = JSON.parse(localStorage.getItem("loggedin"));
         if (user) {
@@ -183,27 +206,11 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         })
     }
-    
-    // Info about page functionality and purpose
-    if (infoTooltip) {
-        infoTooltip.addEventListener("click", function () {
-            infoModal.style.display = "block";
-        });
-    }
-    
-    if (closeInfoModal) {
-        closeInfoModal.addEventListener("click", function () {
-            infoModal.style.display = "none";
-        });
-    }
 
-    window.addEventListener("click", function (event) {
-        if (event.target === infoModal) {
-            infoModal.style.display = "none";
-        }
-    });
+    //**************************************************************************
+    // Budget 
+    //**************************************************************************
 
-    // Budget Microservice
     function loadBudget() {
         fetch(budgetapi)
             .then(response => response.json())
@@ -385,7 +392,10 @@ document.addEventListener("DOMContentLoaded", function () {
         .catch(error => console.error("Delete error:", error));
     }
 
-    // Transactions Microservice
+    //**************************************************************************
+    // Transactions 
+    //**************************************************************************
+
     function loadTransactions() {
         var email = getUserEmail();
         if (!email) return;
@@ -537,24 +547,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 });
         })
     }
-    
-    
-    function loadTransactions() {
-        var email = getUserEmail();
-        if (!email) return;
-    
-        var link = transactionapi + "?email=" + encodeURIComponent(email);
-    
-        fetch(link)
-            .then(response => response.json())
-            .then(function (data) {
-                transactions = data;
-                showTransactions(transactions);
-                updateSummary(transactions);
-                updateProgressBars();
-            });
-    }
-    
+     
     // Edit transaction
     function editTransaction(row) {
         var cells = row.querySelectorAll("td");
@@ -851,8 +844,10 @@ document.addEventListener("DOMContentLoaded", function () {
         localStorage.removeItem("loggedin");
         window.location.href = "/";
     }
+    //**************************************************************************
+    //Recommendation 
+    //**************************************************************************
 
-    //Recommendation Microservice
     const recommendationButton = document.getElementById("generate-recommendation");
     const recommendationOutput = document.getElementById("recommendation-output");
     var recommendHide = false;

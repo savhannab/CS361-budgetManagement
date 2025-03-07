@@ -9,21 +9,39 @@
         "id": 1
     },
     {
-        "type": "Expense",
-        "amount": 1700,
-        "category": "Housing",
-        "itemName": "N/A",
-        "date": "2025-03-01",
+        "type": "expense",
+        "amount": 90,
+        "category": "Utilities",
+        "itemName": "Gas",
+        "date": "2025-03-04",
         "email": "water@outlook.com",
         "id": 4
     },
     {
-        "type": "expense",
-        "amount": 120,
-        "category": "Food",
+        "type": "Expense",
+        "amount": 1400,
+        "category": "Housing",
         "itemName": "N/A",
-        "date": "2025-03-06",
+        "date": "2025-03-07",
         "email": "water@outlook.com",
         "id": 3
+    },
+    {
+        "type": "expense",
+        "amount": 30,
+        "category": "Food",
+        "itemName": "N/A",
+        "date": "2025-03-07",
+        "email": "water@outlook.com",
+        "id": 4
+    },
+    {
+        "type": "Expense",
+        "amount": 20,
+        "category": "Transportation",
+        "itemName": "Car",
+        "date": "2025-03-10",
+        "email": "water@outlook.com",
+        "id": 6
     }
 ]
