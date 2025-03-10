@@ -1,8 +1,3 @@
-const budgetapi = "http://127.0.0.1:5000/budget";
-const transactionapi = "http://127.0.0.1:5001/transactions";
-const loginapi = "http://127.0.0.1:5002/api";
-const recommendapi = "http://127.0.0.1:5003/recommend";
-
 document.addEventListener("DOMContentLoaded", function () {
     var transactionTable = document.getElementById("transaction-table");
     var transactionBtn = document.getElementById("submit-transaction");
@@ -137,7 +132,7 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        fetch(`${loginapi}/users`, {
+        fetch(`/login/users`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ firstName, lastName, email, password, confirmPassword })
@@ -174,7 +169,7 @@ document.addEventListener("DOMContentLoaded", function () {
     function loginUser() {
         const emailInput = document.getElementById("login-email");
         const passwordInput = document.getElementById("login-password");
-        const errorElement = document.getElementById("confirm-error");
+        const errorElement = document.getElementById("login-error");
     
         const email = emailInput.value.trim();
         const password = passwordInput.value.trim();
@@ -186,7 +181,7 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
     
-        fetch(`${loginapi}/login`, {
+        fetch(`login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, password })
@@ -196,6 +191,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (data.error) {
                 errorElement.textContent = data.error;
                 errorElement.style.display = "block";
+                errorElement.style.color = "red"; 
             } else {
                 localStorage.setItem("token", data.token);
                 localStorage.setItem("loggedin", JSON.stringify({ email }));
@@ -212,7 +208,7 @@ document.addEventListener("DOMContentLoaded", function () {
     //**************************************************************************
 
     function loadBudget() {
-        fetch(budgetapi)
+        fetch("/budget")
             .then(response => response.json())
             .then(function (budgetItems) {
                 var budgetTable = document.getElementById("budget-table");
@@ -288,7 +284,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Saves the edited budget item
     function saveBudget(row) {
-        var budgetId = row.getAttribute("data-id");
+        var budgetId = row.getAttribute("data-id"); 
         var cells = row.querySelectorAll("td");
     
         var updatedBudget = {
@@ -300,17 +296,26 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
     
-        fetch(budgetapi + "/" + budgetId, {
+        fetch("http://127.0.0.1:5002/budget/" + budgetId, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(updatedBudget),
         })
-        .then(response => response.json())
-        .then(() => {
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => { throw new Error(`Failed to update budget: ${text}`); });
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log("Budget updated:", data);
             loadBudget(); 
+        })
+        .catch(error => {
+            console.error("Error updating budget:", error);
         });
     }
-
+    
     var addBudgetBtn = document.getElementById("add-category");
     if (addBudgetBtn) {
         addBudgetBtn.addEventListener("click", addBudget);
@@ -335,7 +340,7 @@ document.addEventListener("DOMContentLoaded", function () {
             email: email 
         };
 
-        fetch(budgetapi, {
+        fetch("http://127.0.0.1:5002/budget", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(newBudget),
@@ -375,7 +380,7 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
     
-        var link = `${budgetapi}/${budgetId}`;
+        var link = `http://127.0.0.1:5002/budget/${budgetId}`;
     
         fetch(link, {
             method: "DELETE"
@@ -396,25 +401,61 @@ document.addEventListener("DOMContentLoaded", function () {
     // Transactions 
     //**************************************************************************
 
-    function loadTransactions() {
-        var email = getUserEmail();
-        if (!email) return;
+    // Summary of income, expenses, balance
+    function updateSummary(transactions) {
     
-        var link = new URL(transactionapi);
-        link.searchParams.append("email", email);
+        if (!Array.isArray(transactions) || transactions.length === 0) {
+            console.error("Transactions data is undefined or invalid:", transactions);
+            return;  
+        }
     
-        fetch(link)
-            .then(response => response.json())
-            .then(function (data) {
-                transactions = data;
-                showTransactions(transactions);
-                updateSummary(transactions);
-                updateProgressBars();
-            });
-    }
-         
+        var income = 0, expense = 0;
+        transactions.forEach(transaction => {
+            var amt = parseFloat(transaction.amount);
+            if (!isNaN(amt)) {
+                if (transaction.type.toLowerCase() === "income") {
+                    income += amt;
+                } else {
+                    expense += amt;
+                }
+            }
+        });
 
+        if ( !totalIncome || !totalExpense || !balance) {
+            return;
+        }
+    
+        totalIncome.textContent = "$" + income.toFixed(2);
+        totalExpense.textContent = "$" + expense.toFixed(2);
+        balance.textContent = "$" + (income - expense).toFixed(2);
+    }
+
+    function loadTransactions() {
+        var email = getUserEmail(); 
+        if (!email) {
+            return;
+        }
+    
+        fetch(`http://127.0.0.1:5003/transactions?email=${encodeURIComponent(email)}`, { 
+            method: "GET",
+            headers: { "Content-Type": "application/json" }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (Array.isArray(data) && data.length > 0) {
+                transactions = data;
+                showTransactions(transactions); 
+                updateSummary(transactions);  
+                updateProgressBars();
+                localStorage.setItem("transactions", JSON.stringify(transactions)); 
+            } 
+        })
+    }
+    
     function showTransactions(transactions) {
+        if (!transactionTable) {
+            return;
+        }
         while (transactionTable.firstChild) {
             transactionTable.removeChild(transactionTable.firstChild);
         }
@@ -487,21 +528,13 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
     
-        var type = document.getElementById("type").value;
+        var type = document.getElementById("type").value.trim();
         var valueAmount = parseFloat(document.getElementById("amount").value);
-        var category = document.getElementById("expense-category").value;
-        var itemName = document.getElementById("item-name").value;
-        var date = document.getElementById("date").value;
+        var category = document.getElementById("expense-category").value.trim();
+        var itemName = document.getElementById("item-name").value.trim();
+        var date = document.getElementById("date").value.trim();
     
-        if (!type || (type !== "income" && type !== "expense")) {
-            return;
-        }
-    
-        if (!valueAmount || isNaN(valueAmount) || valueAmount <= 0) {
-            return;
-        }
-    
-        if (!category || !itemName || !date) {
+        if (!type || !valueAmount || !category || !itemName || !date) {
             return;
         }
     
@@ -514,39 +547,18 @@ document.addEventListener("DOMContentLoaded", function () {
             email: email
         };
     
-        fetch(transactionapi, {
+        fetch("http://127.0.0.1:5003/transactions", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(newTransaction)
         })
-        .then(response => {
-            if (!response.ok) {
-                return response.text().then(text => { throw new Error(`Server Error: ${text}`); });
-            }
-            return response.json();
-        })
-        .then(() => {
-            document.getElementById("amount").value = "";
-            document.getElementById("expense-category").value = "";
-            document.getElementById("item-name").value = "";
-            document.getElementById("date").value = "";
-    
-            fetch(transactionapi + "?email=" + encodeURIComponent(email))
-                .then(response => response.json())
-                .then(function (data) {
-                    if (!Array.isArray(data)) { 
-                        console.error("Invalid transactions data:", data);
-                        transactions = [];  
-                    } else {
-                        transactions = data;
-                    }
-    
-                    showTransactions(transactions);
-                    updateSummary(transactions);
-                    updateProgressBars();
-                });
-        })
+        .then(response => response.json())
+        .then(data => {
+            clearFormFields();
+            loadTransactions();  
+        });
     }
+    
      
     // Edit transaction
     function editTransaction(row) {
@@ -589,70 +601,70 @@ document.addEventListener("DOMContentLoaded", function () {
         var transactionId = row.getAttribute("data-id");
         var cells = row.querySelectorAll("td");
     
-        var type = cells[0].querySelector("input").value.trim();
-        var amount = parseFloat(cells[1].querySelector("input").value);
-        var category = cells[2].querySelector("input").value.trim();
-        var itemName = cells[3].querySelector("input").value.trim();
-        var date = cells[4].querySelector("input").value.trim();
-        var user = JSON.parse(localStorage.getItem("loggedin"));
-        var email = null;
-
-        if (user) {
-            email = user.email;
-        }
-
-        if (!type || isNaN(amount) || amount <= 0 || !category || !itemName || !date || !email) {
-            return;
-        }
-    
-        const updatedTransaction = {
-            type: type,
-            amount: amount,
-            category: category,
-            itemName: itemName,
-            date: date,
-            email: email
+        var updatedTransaction = {
+            id: transactionId,
+            type: cells[0].querySelector("input").value.trim(),
+            amount: parseFloat(cells[1].querySelector("input").value),
+            category: cells[2].querySelector("input").value.trim(),
+            itemName: cells[3].querySelector("input").value.trim(),
+            date: cells[4].querySelector("input").value.trim(),
+            email: getUserEmail() 
         };
     
-        fetch(`${transactionapi}/${transactionId}`, {
+        fetch(`http://127.0.0.1:5003/transactions/${updatedTransaction.id}`, {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(updatedTransaction),
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(updatedTransaction)
         })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error("Update failed");
-            }
-            return response.json();
-        })
-        .then(() => {
+        .then(response => response.json())
+        .then(data => {
+            console.log("Transaction updated successfully", data);
             loadTransactions(); 
-        })
+        });
     }
-
+    
+    
+    
+    if (transactions.length > 0) {
+        showTransactions(transactions);
+        updateSummary(transactions);
+        updateProgressBars();
+    }
   
-
+    // Delete transaction
     function deleteTransaction(transactionId) {
-        var email = getUserEmail();
+        var email = getUserEmail();  
         if (!email) {
             return;
         }
     
-        var link = `${transactionapi}/${transactionId}?email=${encodeURIComponent(email)}`;
-    
-        fetch(link, { method: "DELETE" })
-            .then(response => {
-                if (!response.ok) {
-                    return response.text().then(text => { throw new Error(`Failed to delete transaction: ${text}`); });
-                }
-                return response.json();
-            })
-            .then(() => {
-                loadTransactions();  
-                updateProgressBars();
-            })
+        fetch(`http://127.0.0.1:5003/transactions/${transactionId}?email=${encodeURIComponent(email)}`, {
+            method: "DELETE",
+        })
+        
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                console.log("Transaction deleted:", data.message);
+                loadTransactions(); 
+            } else {
+                console.error("Error deleting transaction:", data.error);
+            }
+        })
+        .catch(error => console.error("Error:", error));
     }
     
+    function clearFormFields() {
+        document.getElementById("type").value = ""; 
+        document.getElementById("amount").value = ""; 
+        document.getElementById("expense-category").value = ""; 
+        document.getElementById("item-name").value = ""; 
+        document.getElementById("date").value = ""; 
+    }
+               
+
     // Helper
     function createButton(text, className, onClick) {
         var button = document.createElement("button");
@@ -708,23 +720,23 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!email) {
             return;
         }
-
+    
         var valueAmount = parseFloat(quickAddInput.value);
         if (!valueAmount || isNaN(valueAmount) || valueAmount <= 0) {
             alert("Invalid input");
             return;
         }
-
+    
         var date = new Date().toISOString().split("T")[0];
         var button = event.currentTarget;
         var category = button.getAttribute("data-category");
         var transactionType = "expense";
-
+    
         if (button.textContent.trim().toLowerCase() === "salary") {
             transactionType = "income";
             category = "N/A";
         }
-
+    
         var newTransaction = {
             type: transactionType,
             amount: valueAmount,
@@ -733,17 +745,21 @@ document.addEventListener("DOMContentLoaded", function () {
             date: date,
             email: email
         };
-
-        fetch(transactionapi, {
+    
+        fetch("http://127.0.0.1:5003/transactions", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(newTransaction)
         })
-            .then(response => response.json())
-            .then(function () {
-                quickAddInput.value = "";
-                loadTransactions();
-            });
+        .then(response => response.json())
+        .then(data => {
+            console.log("Quick Add Transaction added:", data);
+            var transactionId = data.id;
+    
+            quickAddInput.value = "";
+            loadTransactions();
+            console.log("Transaction ID for editing:", transactionId);
+        })
     }
 
     quickAddButtons.forEach(function (btn) {
@@ -811,34 +827,12 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
     }  
-
-    // Summary of income, expenses, balance
-    function updateSummary(transactions) {
-        if (!Array.isArray(transactions)) {
-            console.error("Invalid transactions data:", transactions);
-            return;
-        }
     
-        var income = 0, expense = 0;
-        transactions.forEach(transaction => {
-            var amt = parseFloat(transaction.amount);
-            if (!isNaN(amt)) {
-                if (transaction.type.toLowerCase() === "income") {
-                    income += amt;
-                } else {
-                    expense += amt;
-                }
-            }
-        });
-    
-        totalIncome.textContent = "$" + income.toFixed(2);
-        totalExpense.textContent = "$" + expense.toFixed(2);
-        balance.textContent = "$" + (income - expense).toFixed(2);
-    }
     var logoutBtn = document.getElementById("logout-btn");
     if (logoutBtn) {
         logoutBtn.addEventListener("click", logout);
     }
+
     function logout() {
         localStorage.removeItem("token");
         localStorage.removeItem("loggedin");
@@ -862,13 +856,13 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     } 
 
-    // Retrieve recommendation from backend
+    // Retrieve recommendation
     function fetchRecommendations() {
         const income = parseFloat(document.getElementById("income-total").textContent.replace("$", "")) || 0;
         const expenses = parseFloat(document.getElementById("expense-total").textContent.replace("$", "")) || 0;
         const balance = parseFloat(document.getElementById("balance-total").textContent.replace("$", "")) || 0;
     
-        fetch(recommendapi, {
+        fetch("/recommendation", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ income, expenses, balance })

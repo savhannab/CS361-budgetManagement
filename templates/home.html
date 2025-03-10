@@ -6,40 +6,38 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <script src="{{ url_for('static', filename='script.js') }}" defer></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-
     <link rel="icon" href="data:,">
     <title>Budget Management - Home</title>
 </head>
 <body>
     <main id="content">
         <header>
-        <h1>Budget Manager</h1>
-        <div class="profile-header">
-            <h2>Track Your Spending</h2>
-            <div class="info-tooltip">
-                <i class="fas fa-info-circle info-icon"></i>
-                <span class="tooltip-text">Click here for page information</span>
-            </div>
-            <div id="info-modal" class="modal">
-                <div class="modal-content">
-                  <h2>Page Information</h2>
-                  <p>This page allows you to manage your budget and transactions. Once a budget item or transaction is entered, select 'Add' button and the data will populate. You will then be able to edit or delete data as needed. Filter transactions by 'Type', 'Category', or 'Date'
-                    , for quick access to the data you wish to see. You can quickly add a frequestly used transactions by entering and amount and selecting one of the provided categories. View personalized recommendations to recieve feedback on your spending history.</p>
-                  <button id="close-info-modal">Close</button>
+            <h1>Budget Manager</h1>
+            <div class="profile-header">
+                <h2>Track Your Spending</h2>
+                <div class="info-tooltip">
+                    <i class="fas fa-info-circle info-icon"></i>
+                    <span class="tooltip-text">Click here for page information</span>
                 </div>
-              </div>
-      </div>
+                <div id="info-modal" class="modal">
+                    <div class="modal-content">
+                        <h2>Page Information</h2>
+                        <p>This page allows you to manage your budget and transactions. Once a budget item or transaction is entered, select 'Add' button and the data will populate. You will then be able to edit or delete data as needed. Filter transactions by 'Type', 'Category', or 'Date' for quick access to the data you wish to see. You can quickly add frequently used transactions by entering an amount and selecting one of the provided categories. View personalized recommendations to receive feedback on your spending history.</p>
+                        <button id="close-info-modal">Close</button>
+                    </div>
+                </div>
+            </div>
         </header>
-            <aside id="nav">
-                <h1>Welcome</h1>
-                <nav>
-                    <div class="button-container">
-                        <button type="button" id="logout-btn">Log Out</button>
-                      </div>
-                </nav>
-            </aside>
-            
-        </header>
+
+        <aside id="nav">
+            <h1>Welcome</h1>
+            <nav>
+                <div class="button-container">
+                    <button type="button" id="logout-btn">Log Out</button>
+                </div>
+            </nav>
+        </aside>
+
         <section id="summary">
             <div class="summary-box">
                 <h3>Income</h3>
@@ -54,19 +52,19 @@
                 <p class="balance" id="balance-total">$0.00</p>
             </div>
         </section>
+
         <div id="recommendation-output">
             <p>Click the button below to generate advice.</p>
         </div>
         <button id="generate-recommendation">Generate Recommendations</button>
-    
+
         <section id="budget-container">
             <section id="budgets">
                 <h2>Budget</h2>
-                <div id="budget-summary">
-                </div>
+                <div id="budget-summary"></div>
                 <canvas id="spendingChart"></canvas>
             </section>
-    
+
             <section id="budget-categories">
                 <h2>Budget Item</h2>
                 <table>
@@ -77,32 +75,36 @@
                             <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="budget-table">
-                    </tbody>
+                    <tbody id="budget-table"></tbody>
                 </table>
-                </section>
-                <div id="add-section">
-                    <div class="card">
-                        <h3>Add Budget</h3>
-                        <select id="budget-category" required>
-                            <option value="" disabled selected>Select Category</option>
-                            <option value="Food">Food</option>
-                            <option value="Bills">Bills</option>
-                            <option value="Transportation">Transportation</option>
-                            <option value="Entertainment">Entertainment</option>
-                            <option value="Health">Health</option>
-                            <option value="Insurance">Insurance</option>
-                            <option value="Housing">Housing</option>
-                            <option value="Utilities">Utilities</option>
-                            <option value="Debt">Debt</option>
-                            <option value="Other">Other</option>
-                        </select>
-                            <input type="number" id="allocation-amount" placeholder="Allocation Amount" required>
-                            <button id="add-category">Add</button>
-                        </div>
-                    </div>
+            </section>
+
+            <div id="add-section">
+                <div class="card">
+                    <h3>Add Budget</h3>
+                    <label for="budget-category">Select Category</label>
+                    <select id="budget-category" required>
+                        <option value="" disabled selected>Select Category</option>
+                        <option value="Food">Food</option>
+                        <option value="Bills">Bills</option>
+                        <option value="Transportation">Transportation</option>
+                        <option value="Entertainment">Entertainment</option>
+                        <option value="Health">Health</option>
+                        <option value="Insurance">Insurance</option>
+                        <option value="Housing">Housing</option>
+                        <option value="Utilities">Utilities</option>
+                        <option value="Debt">Debt</option>
+                        <option value="Other">Other</option>
+                    </select>
+
+                    <label for="allocation-amount">Allocation Amount</label>
+                    <input type="number" id="allocation-amount" placeholder="Allocation Amount" required>
+
+                    <button id="add-category">Add</button>
                 </div>
+            </div>
         </section>
+
         <section class="filter-container">
             <div class="filter-box">
                 <h3>Filter Transactions</h3>
@@ -113,7 +115,7 @@
                         <option value="income">Income</option>
                         <option value="expense">Expense</option>
                     </select>
-        
+
                     <label for="filter-category">Filter by Category:</label>
                     <select id="filter-category">
                         <option value="All">All</option>
@@ -128,12 +130,12 @@
                         <option value="Debt">Debt</option>
                         <option value="Other">Other</option>
                     </select>
-        
+
                     <label for="filter-date">Filter by Date:</label>
                     <input type="date" id="filter-date">
                 </div>
             </div>
-        
+
             <div class="quick-add-box">
                 <h3>Quick Add Transactions</h3>
                 <div class="quick-add-container">
@@ -143,17 +145,22 @@
                     <input type="number" id="amount-add" placeholder="Amount">
                 </div>
             </div>            
-        </section>        
+        </section>
 
         <section id="transaction-form-section">
             <h2>Add Transaction</h2>
             <div class="transaction-form">
+                <label for="type">Select Type</label>
                 <select id="type">
                     <option value="" disabled selected>Select Type</option>
                     <option value="income">Income</option>
                     <option value="expense">Expense</option>
                 </select>
+
+                <label for="amount">Amount</label>
                 <input type="number" id="amount" placeholder="Amount">
+
+                <label for="expense-category">Select Category</label>
                 <select id="expense-category" required>
                     <option value="" disabled selected>Select Category</option>
                     <option value="None">N/A</option>
@@ -168,13 +175,17 @@
                     <option value="Debt">Debt</option>
                     <option value="Other">Other</option>
                 </select>
+
+                <label for="item-name">Item Name</label>
                 <input type="item" id="item-name" placeholder="Item Name" required>
+
+                <label for="date">Date</label>
                 <input type="date" id="date">
-                <button id="submit-transaction">Add</button>  
+
+                <button id="submit-transaction">Add</button>
+            </div>
         </section>
-        
-        </section>
-        
+
         <section id="transactions">
             <h2>Recent Transactions</h2>
             <table>
@@ -194,15 +205,16 @@
 
         <div id="confirm-modal" class="modal">
             <div class="modal-content">
-            <h2>Are you sure?</h2>
-            <p>This action will permanently remove the data.</p>
-            <div class="modal-actions">
-                <button id="confirm-btn">Yes, Proceed</button>
-                <button id="cancel-btn">Cancel</button>
-            </div>
+                <h2>Are you sure?</h2>
+                <p>This action will permanently remove the data.</p>
+                <div class="modal-actions">
+                    <button id="confirm-btn">Yes, Proceed</button>
+                    <button id="cancel-btn">Cancel</button>
+                </div>
             </div>
         </div>
     </main>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </body>
 </html>

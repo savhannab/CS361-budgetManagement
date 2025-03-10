@@ -14,10 +14,10 @@
     "spent": 0
   },
   {
-    "category": "Transportation",
-    "amount": 120,
+    "category": "Utilities",
+    "amount": 60.0,
     "email": "water@outlook.com",
-    "id": 7,
+    "id": 10,
     "spent": 0
   }
 ]

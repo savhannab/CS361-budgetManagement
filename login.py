@@ -86,7 +86,6 @@ def register():
     }), 201
 
 # Login
-# Login
 @app.route("/api/login", methods=["POST"])
 def login():
     data = request.get_json()
@@ -125,4 +124,4 @@ def logout():
     return jsonify({"redirect": "/"})
 
 if __name__ == "__main__":
-    app.run(port=5002, debug=True)
+    app.run(port=5001, debug=True)

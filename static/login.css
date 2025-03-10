@@ -148,7 +148,7 @@ background-color: #8d7d5a;
 }
 
 #login {
-    display: block;
+    display: none;   
 }
 
 .selection-content section:target {

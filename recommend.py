@@ -40,4 +40,4 @@ def recommend():
     return jsonify({"recommendation": recommendation})
 
 if __name__ == '__main__':
-    app.run(port=5003, debug=True)
+    app.run(port=5004, debug=True)
