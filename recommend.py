@@ -6,7 +6,7 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-
+# Generate recommendations based on income, expenses, and balance
 def generate_recommendations(income, expenses, balance):
     savings_percentage = (balance / income) * 100 if income > 0 else 0
     expense_ratio = (expenses / income) * 100 if income > 0 else 0
@@ -24,6 +24,7 @@ def generate_recommendations(income, expenses, balance):
     else:
         return "Good job! You are making good progress."
 
+# Recommendation requests, receiving income, expenses, and balance
 @app.route('/recommend', methods=['POST'])
 def recommend():
     data = request.get_json()
@@ -35,6 +36,7 @@ def recommend():
     expenses = float(data["expenses"])
     balance = float(data["balance"])
 
+    # Generate the recommendation 
     recommendation = generate_recommendations(income, expenses, balance)
 
     return jsonify({"recommendation": recommendation})

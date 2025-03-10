@@ -1,23 +1,2 @@
 [
-  {
-    "category": "Food",
-    "amount": 300,
-    "email": "water@outlook.com",
-    "id": 5,
-    "spent": 0
-  },
-  {
-    "category": "Housing",
-    "amount": 1800.0,
-    "email": "water@outlook.com",
-    "id": 6,
-    "spent": 0
-  },
-  {
-    "category": "Utilities",
-    "amount": 60.0,
-    "email": "water@outlook.com",
-    "id": 10,
-    "spent": 0
-  }
 ]

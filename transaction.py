@@ -17,7 +17,7 @@ def load_transactions():
         print(f"Transactions loaded: {transactions}")  
         return transactions
 
-
+# Write to file transaction added
 def save_transactions(transactions):
     try:
         with open('transactions.json', 'w') as file:
@@ -26,6 +26,7 @@ def save_transactions(transactions):
     except Exception as e:
         print(f"Error saving transactions: {str(e)}")
 
+# Transaction data based on user email
 @app.route('/transactions', methods=['GET'])
 def get_transactions():
     try:
@@ -45,7 +46,6 @@ def get_transactions():
     except Exception as e:
         print(f"Error occurred: {str(e)}")
         return jsonify({"error": str(e)}), 500
-
 
 # Add a new transaction
 def generate_unique_id():
@@ -77,8 +77,6 @@ def add_transaction():
         print(f"Error occurred while adding transaction: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
-
-
 # Update an existing transaction
 @app.route('/transactions/<int:id>', methods=['PUT'])
 def update_transaction(id):
@@ -98,15 +96,14 @@ def update_transaction(id):
         
         # Update the transaction
         transaction.update(transaction_data)
-        save_transactions(transactions)  # Save the updated list back to file
+        save_transactions(transactions)  
         
         return jsonify(transaction), 200
     except Exception as e:
         print(f"Error updating transaction: {e}")
         return jsonify({"error": "Internal server error"}), 500
 
-
-# Delete a transaction
+# Delete a transaction based on Id
 @app.route('/transactions/<int:transaction_id>', methods=['DELETE'])
 def delete_transaction(transaction_id):
     try:
@@ -131,8 +128,6 @@ def delete_transaction(transaction_id):
     except Exception as e:
         print(f"Error deleting transaction: {e}")
         return jsonify({"error": "Internal server error"}), 500
-
-
 
 if __name__ == '__main__':
     app.run(port=5003, debug=True)
