@@ -1,2 +1,8 @@
 {
+    "h@outlook.com": {
+        "firstName": "Hello",
+        "lastName": "World",
+        "password": "Hello2020!",
+        "transactions": []
+    }
 }

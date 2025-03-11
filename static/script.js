@@ -77,7 +77,25 @@ document.addEventListener("DOMContentLoaded", function () {
             loadTransactions();
         }
     }
-    window.onload = returnLoginPage;    
+    window.onload = function() {
+        returnLoginPage(); 
+
+        if (localStorage.getItem("loggedin")) {
+            if (window.location.pathname !== "/home") {
+                window.location.href = "/home"; 
+            }
+            return;
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const email = urlParams.get("email");
+        const password = urlParams.get("password");
+
+        if (email && password) {
+            loginUser(email, password);
+        }
+    };
+
 
     // Switch between login & signup forms
     document.getElementById("signing-up")?.addEventListener("click", function (event) {
@@ -189,20 +207,34 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    function loginUser() {
-        const emailInput = document.getElementById("login-email");
-        const passwordInput = document.getElementById("login-password");
+    const loginForm = document.getElementById("login-form");
+    if (loginForm) {  
+        loginForm.addEventListener("submit", function (event) {
+            event.preventDefault();
+            const email = document.getElementById("login-email").value.trim();
+            const password = document.getElementById("login-password").value.trim();
+            loginUser(email, password);
+        });
+    }
+    
+
+    function loginUser(email, password) {
         const errorElement = document.getElementById("login-error");
-    
-        const email = emailInput.value.trim();
-        const password = passwordInput.value.trim();
-    
-        // Check if email and password fields are empty
-        if (!email || !password) {
-            errorElement.textContent = "All fields are required.";
-            errorElement.style.color = "red";
-            errorElement.style.display = "block";
-            return;
+            // Check if email and password fields are empty
+       if (!email || !password) {
+        errorElement.textContent = "All fields are required.";
+        errorElement.style.color = "red";
+        errorElement.style.display = "block";
+        return;
+        }
+
+        // Check if user is already logged in
+        if (localStorage.getItem("loggedin")) {
+            if (window.location.pathname !== "/home") {
+                
+                window.location.href = "/home"; 
+            }
+            return; 
         }
     
         // Send login request to backend
@@ -220,9 +252,11 @@ document.addEventListener("DOMContentLoaded", function () {
             return response.json();  
         })
         .then(data => {
-            localStorage.setItem("token", data.token);
-            localStorage.setItem("loggedin", JSON.stringify({ email }));
-            window.location.href = data.redirect; 
+            if (data.token) {
+                localStorage.setItem("token", data.token);
+                localStorage.setItem("loggedin", JSON.stringify({ email: email.toLowerCase() })); 
+                window.location.href = "/home"; 
+            }
         })
         .catch(error => {
             errorElement.textContent = error.message || "Invalid username or password";
@@ -231,7 +265,6 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
     
-
     //**************************************************************************
     // Budget 
     //**************************************************************************
@@ -430,7 +463,9 @@ document.addEventListener("DOMContentLoaded", function () {
     function updateSummary(transactions) {
     
         if (!Array.isArray(transactions) || transactions.length === 0) {
-            console.error("Transactions data is undefined or invalid:", transactions);
+            totalIncome.textContent = "$0.00";
+            totalExpense.textContent = "$0.00";
+            balance.textContent = "$0.00";
             return;  
         }
     
@@ -673,25 +708,25 @@ document.addEventListener("DOMContentLoaded", function () {
         .then(data => {
             if (data.message) {
                 console.log("Transaction deleted:", data.message);
-            
                 let transactions = JSON.parse(localStorage.getItem("transactions"));
                 transactions = transactions.filter(transaction => transaction.id !== transactionId);
+                updateSummary(transactions);  
+                showTransactions(transactions);
+                updateProgressBars();
+                removeTransactionLocal(transactionId); 
                 localStorage.setItem("transactions", JSON.stringify(transactions));
-                removeTransactionLocal(transactionId);
-                loadTransactions(); 
-            } else {
-                console.error("Error deleting transaction:", data.error);
-            }
+            } 
         })
     }
+    
 
     function removeTransactionLocal(transactionId) {
         const row = document.querySelector(`tr[data-id="${transactionId}"]`);
         if (row) {
-            row.remove(); 
+            row.remove();
         }
     }
-    
+
     function clearFormFields() {
         document.getElementById("type").value = ""; 
         document.getElementById("amount").value = ""; 
