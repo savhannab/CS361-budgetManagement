@@ -131,28 +131,51 @@ document.addEventListener("DOMContentLoaded", function () {
             errorElement.style.color = "red";
             return;
         }
-
-        fetch(`/login/users`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ firstName, lastName, email, password, confirmPassword })
+        errorElement.style.display = "none"; 
+        
+        fetch('http://127.0.0.1:5001/api/users', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                firstName, 
+                lastName, 
+                email, 
+                password, 
+                confirmPassword
+            })
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                errorElement.textContent = data.error;
-                errorElement.style.display = "block";
-            } else {
-                localStorage.setItem("token", data.token);
-                localStorage.setItem("loggedin", JSON.stringify({ email }));
-                window.location.href = "/home";
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
+            return response.json();
+        })
+        .then(data => {
+            // Success message
+            const successMessage = document.createElement("div");
+            successMessage.textContent = "Account successfully created! You will now be redirected to the login form.";
+            successMessage.style.color = "green";
+            successMessage.style.fontSize = "18px";
+            successMessage.style.marginBottom = "20px";
+            document.getElementById("signup-form").insertBefore(successMessage, document.getElementById("signup-form").firstChild);
+    
+            // 3 second delay, switch to the login form
+            setTimeout(() => {
+                document.querySelector(".selection.active").classList.remove("active");
+                document.getElementById("logging-in").parentElement.classList.add("active");
+                document.getElementById("login").style.display = "block";
+                document.getElementById("signup").style.display = "none";
+            }, 3000); 
         })
         .catch(error => {
             console.error("Signup Error:", error);
+            errorElement.textContent = "Error creating account. Please try again.";
+            errorElement.style.color = "red";
+            errorElement.style.display = "block";
         });
     });
-
 
     // Login
     function attachLoginListener() {
@@ -174,34 +197,40 @@ document.addEventListener("DOMContentLoaded", function () {
         const email = emailInput.value.trim();
         const password = passwordInput.value.trim();
     
+        // Check if email and password fields are empty
         if (!email || !password) {
-            errorElement.textContent = "All fields required.";
+            errorElement.textContent = "All fields are required.";
             errorElement.style.color = "red";
             errorElement.style.display = "block";
             return;
         }
     
-        fetch(`login`, {
+        // Send login request to backend
+        fetch('http://127.0.0.1:5001/api/login', {  
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, password })
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                errorElement.textContent = data.error;
-                errorElement.style.display = "block";
-                errorElement.style.color = "red"; 
-            } else {
-                localStorage.setItem("token", data.token);
-                localStorage.setItem("loggedin", JSON.stringify({ email }));
-                checkLogin = true;
-                checkBudget = true;
-                checkTransactions = true;
-                window.location.href = data.redirect;
+        .then(response => {
+            if (!response.ok) {  
+                return response.json().then(data => {  
+                    throw new Error(data.error || 'Login failed');
+                });
             }
+            return response.json();  
         })
+        .then(data => {
+            localStorage.setItem("token", data.token);
+            localStorage.setItem("loggedin", JSON.stringify({ email }));
+            window.location.href = data.redirect; 
+        })
+        .catch(error => {
+            errorElement.textContent = error.message || "Invalid username or password";
+            errorElement.style.display = "block";
+            errorElement.style.color = "red";
+        });
     }
+    
 
     //**************************************************************************
     // Budget 
@@ -311,9 +340,6 @@ document.addEventListener("DOMContentLoaded", function () {
             console.log("Budget updated:", data);
             loadBudget(); 
         })
-        .catch(error => {
-            console.error("Error updating budget:", error);
-        });
     }
     
     var addBudgetBtn = document.getElementById("add-category");
@@ -394,7 +420,6 @@ document.addEventListener("DOMContentLoaded", function () {
         .then(() => {
             loadBudget();
         })
-        .catch(error => console.error("Delete error:", error));
     }
 
     //**************************************************************************
@@ -648,12 +673,23 @@ document.addEventListener("DOMContentLoaded", function () {
         .then(data => {
             if (data.message) {
                 console.log("Transaction deleted:", data.message);
+            
+                let transactions = JSON.parse(localStorage.getItem("transactions"));
+                transactions = transactions.filter(transaction => transaction.id !== transactionId);
+                localStorage.setItem("transactions", JSON.stringify(transactions));
+                removeTransactionLocal(transactionId);
                 loadTransactions(); 
             } else {
                 console.error("Error deleting transaction:", data.error);
             }
         })
-        .catch(error => console.error("Error:", error));
+    }
+
+    function removeTransactionLocal(transactionId) {
+        const row = document.querySelector(`tr[data-id="${transactionId}"]`);
+        if (row) {
+            row.remove(); 
+        }
     }
     
     function clearFormFields() {

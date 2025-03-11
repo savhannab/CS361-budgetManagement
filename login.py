@@ -1,7 +1,9 @@
 from flask import Flask, request, jsonify, render_template
 import json, os, time
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 users_file, tokens_file = "users.json", "tokens.json"
 
 # Ensure JSON files exist
@@ -43,72 +45,64 @@ def home_page():
 # Register a new user
 @app.route("/api/users", methods=["POST"])
 def register():
-    data = request.get_json()
-    users = load_json(users_file)
-    tokens = load_json(tokens_file)
+    try:
+        data = request.get_json()
+        users = load_json(users_file)
+        tokens = load_json(tokens_file)
 
-    email = data.get("email", "").strip().lower()
+        email = data.get("email", "").strip().lower()
 
-    # All fields required
-    if not all([data.get("firstName"), data.get("lastName"), email, data.get("password"), data.get("confirmPassword")]):
-        return jsonify({"error": "All fields are required"}), 400
+        # All fields required
+        if not all([data.get("firstName"), data.get("lastName"), email, data.get("password"), data.get("confirmPassword")]):
+            return jsonify({"error": "All fields are required"}), 400
 
-    # Confirm passwords match
-    if data["password"] != data["confirmPassword"]:
-        return jsonify({"error": "Passwords do not match"}), 400
+        # Confirm passwords match
+        if data["password"] != data["confirmPassword"]:
+            return jsonify({"error": "Passwords do not match"}), 400
 
-    # Validate password 
-    if not is_valid_password(data["password"]):
-        return jsonify({"error": "Password must be at least 8 characters, include an uppercase letter, a number, and a special character."}), 400
+        # Validate password 
+        if not is_valid_password(data["password"]):
+            return jsonify({"error": "Password must be at least 8 characters, include an uppercase letter, a number, and a special character."}), 400
 
-    # Check if email already exists
-    if email in users:
-        return jsonify({"error": "User already exists"}), 409
+        # Check if email already exists
+        if email in users:
+            return jsonify({"error": "User already exists"}), 409
 
-    # Save new user (Add empty transactions list)
-    users[email] = {
-        "firstName": data["firstName"],
-        "lastName": data["lastName"],
-        "password": data["password"],
-        "transactions": []  
-    }
-    save_json(users_file, users)
+        # Save new user (Add empty transactions list)
+        users[email] = {
+            "firstName": data["firstName"],
+            "lastName": data["lastName"],
+            "password": data["password"],
+            "transactions": []  # Add empty transactions
+        }
+        save_json(users_file, users)
 
-    # Generate and store token
-    token = generate_token(email)
-    tokens[email] = token
-    save_json(tokens_file, tokens)
-
-    return jsonify({
-        "message": "Success",
-        "token": token,
-        "redirect": "/home"
-    }), 201
-
-# Login
-@app.route("/api/login", methods=["POST"])
-def login():
-    data = request.get_json()
-    users = load_json(users_file)
-    tokens = load_json(tokens_file)  
-
-    email = data.get("email", "").strip().lower()
-    password = data.get("password", "")
-
-    if email in users and users[email]["password"] == password:
+        # Generate and store token
         token = generate_token(email)
         tokens[email] = token
         save_json(tokens_file, tokens)
 
         return jsonify({
-            "message": "Login successful",
+            "message": "Success",
             "token": token,
-            "redirect": "/home",
-            "email": email,  
-            "transactions": users[email].get("transactions", [])
-        }), 200
+            "redirect": "/home"
+        }), 201
+    except Exception as e:
+        return jsonify({"error": f"Unexpected error: {str(e)}"}), 500
 
-    return jsonify({"error": "Invalid username or password"}), 401
+# Login
+@app.route("/api/login", methods=["POST"])
+def login():
+    data = request.get_json()
+    email = data.get("email", "").strip().lower()
+    password = data.get("password", "")
+
+    users = load_json(users_file)
+
+    if email in users and users[email]["password"] == password:
+        return jsonify({"message": "Login successful", "token": "your_token", "redirect": "/home"}), 200
+    else:
+        return jsonify({"error": "Invalid username or password"}), 401
 
 # Logout
 @app.route("/api/logout", methods=["POST"])
